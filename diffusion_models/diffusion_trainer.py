@@ -1,4 +1,19 @@
-import dataclasses
+import pathlib
+from typing import Optional, Callable, Dict
+
+import torch
+from torch import amp
+from torch.nn import functional as F
+from torch.utils.data import Dataset, DataLoader
+from tqdm import tqdm
+
+from diffusion_models.gaussian_diffusion.beta_schedulers import \
+  BaseBetaScheduler, LinearBetaScheduler
+from diffusion_models.gaussian_diffusion.gaussian_diffuser import \
+  GaussianDiffuser
+from diffusion_models.utils.schemas import TrainingConfiguration, \
+  LogConfiguration, Checkpoint
+from diffusion_models.utils.tensorboard import TensorboardManager
 import pathlib
 from typing import Optional, Callable, Dict
 
@@ -40,9 +55,8 @@ class DiffusionTrainer:
 
     self.beta_scheduler = beta_scheduler
     self.gaussian_diffuser = GaussianDiffuser(
-      beta_scheduler=beta_scheduler.to(device),
-      device=self.device
-    )
+      beta_scheduler=beta_scheduler,
+    ).to(device)
 
     self.dataloader = DataLoader(
       dataset=dataset,
@@ -81,9 +95,7 @@ class DiffusionTrainer:
       scaler=self.scaler.state_dict() if self.training_configuration.mixed_precision_training else None,
       tensorboard_run_name=self.tensorboard_manager.summary_writer.log_dir,
     )
-    torch.save(
-      dataclasses.asdict(checkpoint), self.checkpoint_path / checkpoint_name
-    )
+    checkpoint.to_file(self.checkpoint_path / checkpoint_name)
 
   def train(self):
     self.model.train()

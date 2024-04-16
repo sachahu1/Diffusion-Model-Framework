@@ -1,5 +1,7 @@
+import dataclasses
+import pathlib
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 
 import torch
 from torch.cuda.amp import GradScaler
@@ -21,10 +23,10 @@ class TrainingConfiguration:
 
 @dataclass
 class LogConfiguration:
-  # metrics: Dict[str, float]
   log_rate: int = 10
   image_rate: int = 50
   number_of_images: int = 5
+  # metrics: Dict[str, float] # TODO: consider Dict[str, Callable]
 
 
 @dataclass
@@ -34,9 +36,14 @@ class Checkpoint:
   optimizer_state_dict: Dict[str, Any]
   scaler: Optional[GradScaler]
   tensorboard_run_name: Optional[str] = None
-  loss: Optional[float] = None
+  loss: Optional[float] = None # TODO: remove legacy parameter and resave models
 
   @classmethod
   def from_file(cls, file_path: str) -> "Checkpoint":
     checkpoint = torch.load(f=file_path)
     return cls(**checkpoint)
+
+  def to_file(self, file_path: Union[str, pathlib.Path]) -> None:
+    torch.save(
+      dataclasses.asdict(self), file_path
+    )

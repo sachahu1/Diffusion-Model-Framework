@@ -11,9 +11,14 @@ from diffusion_models.gaussian_diffusion.beta_schedulers import \
 
 
 class GaussianDiffuser:
-  def __init__(self, beta_scheduler: BaseBetaScheduler, device: str = "cuda"):
+  def __init__(self, beta_scheduler: BaseBetaScheduler):
+    self.beta_scheduler = beta_scheduler
+    self.device = "cuda"
+
+  def to(self, device: str):
     self.device = device
-    self.beta_scheduler = beta_scheduler.to(self.device)
+    self.beta_scheduler = self.beta_scheduler.to(self.device)
+    return self
 
   def diffuse_batch(self, images):
     timesteps = torch.randint(
@@ -69,13 +74,12 @@ class DiffusionInference:
     self.image_channels = image_shape[0]
     self.image_size = image_shape[1]
 
-    self.gaussian_diffuser = gaussian_diffuser
+    self.gaussian_diffuser = gaussian_diffuser.to(device)
     self.model = model.to(device)
 
     self.reverse_transforms = reverse_transforms
 
     self.device = device
-    pass
 
   def _visualise_images(self, denoised_images: torch.Tensor):
     reverse_transformed_images = self.reverse_transforms(denoised_images)
