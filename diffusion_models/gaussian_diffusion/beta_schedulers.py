@@ -5,9 +5,9 @@ import torch
 
 class BaseBetaScheduler:
   def __init__(self, steps: int):
+    self.steps = steps
     self.betas = self.sample_betas()
     self.alpha_bars = self.compute_alpha_bar()
-    self.steps = steps
 
   @abc.abstractmethod
   def sample_betas(self):
@@ -31,7 +31,6 @@ class LinearBetaScheduler(BaseBetaScheduler):
   ):
     self.beta_start = beta_start
     self.beta_end = beta_end
-    self.steps = steps
     super().__init__(steps)
 
   def sample_betas(self):
