@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "diffusion-models"
+version = "0.1.0"
+description = ""
+authors = ["Sacha Hu <sachahu@mindsparkai.com>"]
+readme = "README.md"
+packages = [
+    { include = "diffusion_models" }
+]
+
+[tool.poetry.dependencies]
+python = ">3.9,<=3.11"
+torch = "^2.2.1"
+matplotlib = "^3.8.3"
+numpy = "^1.26.4"
+pillow = "^10.2.0"
+torchvision = "^0.17.1"
+scipy = "^1.12.0"
+tensorboard = "^2.16.2"
+tqdm = "^4.66.2"
+click = "^8.1.7"
+torchviz = "^0.0.2"
+torchview = "^0.2.6"
+diffusers = "^0.27.2"
+
+
+[tool.poetry.group.jupyter.dependencies]
+jupyter = "^1.0.0"
+
+
+[tool.poetry.group.gdown.dependencies]
+gdown = "^5.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
