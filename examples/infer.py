@@ -1,16 +1,23 @@
 import torch
 from torchvision import transforms
 
-from diffusion_models.gaussian_diffusion.beta_schedulers import \
-  LinearBetaScheduler
-from diffusion_models.gaussian_diffusion.gaussian_diffuser import \
-  DiffusionInference, GaussianDiffuser
+from diffusion_models.gaussian_diffusion.beta_schedulers import (
+  LinearBetaScheduler,
+)
+from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
+  DiffusionInference,
+)
+from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
+  GaussianDiffuser,
+)
 from diffusion_models.models.SimpleUnet import SimpleUnet
 from diffusion_models.utils.schemas import Checkpoint
 
-if __name__ == '__main__':
 
-  checkpoint_file_path = "../checkpoints/SimpleTraining/model_50.pt"
+if __name__ == "__main__":
+  checkpoint_file_path = (
+    "your_checkpoint.pt"
+  )
   image_channels = 3
 
   gaussian_diffuser = GaussianDiffuser(
@@ -41,6 +48,6 @@ if __name__ == '__main__':
     gaussian_diffuser=gaussian_diffuser,
     model=model,
     reverse_transforms=reverse_transforms,
-    device="cuda"
+    device="cuda",
   )
   inference.generate(number_of_images=25, save_gif=True)

@@ -1,4 +1,5 @@
-from typing import Optional, Dict
+from typing import Dict
+from typing import Optional
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -19,7 +20,5 @@ class TensorboardManager:
 
   def log_images(self, tag: str, images: torch.Tensor, timestep: int):
     self.summary_writer.add_images(
-      tag=tag,
-      img_tensor=images,
-      global_step=timestep
+      tag=tag, img_tensor=images, global_step=timestep
     )

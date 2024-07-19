@@ -1,22 +1,25 @@
 import torch
 from torch.nn import functional as F
 from torch.optim import Adam
-from torchvision import datasets, transforms
+from torchvision import datasets
+from torchvision import transforms
 
 from diffusion_models.diffusion_trainer import DiffusionTrainer
-from diffusion_models.gaussian_diffusion.beta_schedulers import \
-  LinearBetaScheduler
+from diffusion_models.gaussian_diffusion.beta_schedulers import (
+  LinearBetaScheduler,
+)
 from diffusion_models.models.SimpleUnet import SimpleUnet
-from diffusion_models.utils.schemas import TrainingConfiguration, \
-  LogConfiguration
+from diffusion_models.utils.schemas import LogConfiguration
+from diffusion_models.utils.schemas import TrainingConfiguration
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
   image_size = 64
   image_channels = 3
 
   training_configuration = TrainingConfiguration(
     batch_size=128,
-    learning_rate=2 * 10E-4,
+    learning_rate=2 * 10e-4,
     number_of_epochs=500,
     training_name="SimpleTraining",
     checkpoint_rate=100,
@@ -32,6 +35,8 @@ if __name__ == '__main__':
     steps=1000,
   )
   model = SimpleUnet(image_channels=image_channels)
+  print("Num params: ", sum(p.numel() for p in model.parameters()))
+
   model = torch.compile(model, fullgraph=True, mode="reduce-overhead")
 
   # Define Image Transforms and Reverse Transforms
@@ -39,7 +44,7 @@ if __name__ == '__main__':
     [
       transforms.Resize((image_size, image_size)),
       transforms.ToTensor(),
-      transforms.Lambda(lambda x: (x * 2) - 1)
+      transforms.Lambda(lambda x: (x * 2) - 1),
     ]
   )
   reverse_transforms = transforms.Compose(
@@ -51,15 +56,16 @@ if __name__ == '__main__':
 
   # Define Dataset
   dataset = datasets.CelebA(
-    root="../data", download=False, transform=image_transforms,
-    split="train"
+    root="../data", download=False, transform=image_transforms, split="train"
   )
 
   # Instantiate DiffusionTrainer
   trainer = DiffusionTrainer(
     model=model,
     dataset=dataset,
-    optimizer=Adam(model.parameters(), lr=training_configuration.learning_rate),
+    optimizer=Adam(
+      model.parameters(), lr=training_configuration.learning_rate
+    ),
     training_configuration=training_configuration,
     loss_function=F.l1_loss,
     beta_scheduler=beta_scheduler,

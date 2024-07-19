@@ -22,6 +22,7 @@ class BaseBetaScheduler:
     self.alpha_bars = self.alpha_bars.to(device)
     return self
 
+
 class LinearBetaScheduler(BaseBetaScheduler):
   def __init__(
     self,

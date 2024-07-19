@@ -20,7 +20,11 @@ class Block(nn.Module):
     self.bnorm2 = nn.BatchNorm2d(out_ch)
     self.relu = nn.ReLU()
 
-  def forward(self, x, t, ):
+  def forward(
+    self,
+    x,
+    t,
+  ):
     # First Conv
     h = self.bnorm1(self.relu(self.conv1(x)))
     # Time embedding
@@ -56,7 +60,10 @@ class SimpleUnet(nn.Module):
   A simplified variant of the Unet architecture.
   """
 
-  def __init__(self, image_channels: int, ):
+  def __init__(
+    self,
+    image_channels: int,
+  ):
     super().__init__()
     image_channels = image_channels
     down_channels = (64, 128, 256, 512, 1024)
@@ -68,7 +75,7 @@ class SimpleUnet(nn.Module):
     self.time_mlp = nn.Sequential(
       SinusoidalPositionEmbeddings(time_emb_dim),
       nn.Linear(time_emb_dim, time_emb_dim),
-      nn.ReLU()
+      nn.ReLU(),
     )
 
     # Initial projection
@@ -76,18 +83,17 @@ class SimpleUnet(nn.Module):
 
     # Downsample
     self.downs = nn.ModuleList(
-      [Block(
-        down_channels[i], down_channels[i + 1],
-        time_emb_dim
-      ) \
-        for i in range(len(down_channels) - 1)]
+      [
+        Block(down_channels[i], down_channels[i + 1], time_emb_dim)
+        for i in range(len(down_channels) - 1)
+      ]
     )
     # Upsample
     self.ups = nn.ModuleList(
-      [Block(
-        up_channels[i], up_channels[i + 1],
-        time_emb_dim, up=True
-      ) for i in range(len(up_channels) - 1)]
+      [
+        Block(up_channels[i], up_channels[i + 1], time_emb_dim, up=True)
+        for i in range(len(up_channels) - 1)
+      ]
     )
 
     # Edit: Corrected a bug found by Jakub C (see YouTube comment)

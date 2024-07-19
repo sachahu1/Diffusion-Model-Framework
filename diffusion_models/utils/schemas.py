@@ -1,7 +1,10 @@
 import dataclasses
 import pathlib
 from dataclasses import dataclass
-from typing import Dict, Any, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
 
 import torch
 from torch.cuda.amp import GradScaler
@@ -36,7 +39,9 @@ class Checkpoint:
   optimizer_state_dict: Dict[str, Any]
   scaler: Optional[GradScaler]
   tensorboard_run_name: Optional[str] = None
-  loss: Optional[float] = None # TODO: remove legacy parameter and resave models
+  loss: Optional[float] = (
+    None  # TODO: remove legacy parameter and resave models
+  )
 
   @classmethod
   def from_file(cls, file_path: str) -> "Checkpoint":
@@ -44,6 +49,4 @@ class Checkpoint:
     return cls(**checkpoint)
 
   def to_file(self, file_path: Union[str, pathlib.Path]) -> None:
-    torch.save(
-      dataclasses.asdict(self), file_path
-    )
+    torch.save(dataclasses.asdict(self), file_path)
