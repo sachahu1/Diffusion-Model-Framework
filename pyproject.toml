@@ -1,0 +1,74 @@
+[tool.poetry]
+name = "diffusion-models"
+version = "0.1.0"
+description = ""
+authors = ["Sacha Hu <sachahu@mindsparkai.com>"]
+readme = "README.md"
+packages = [
+    { include = "diffusion_models" }
+]
+
+[tool.poetry.dependencies]
+python = ">3.9,<=3.11"
+torch = "^2.2.1"
+numpy = "^1.26.4"
+pillow = "^10.2.0"
+torchvision = "^0.17.1"
+scipy = "^1.12.0"
+tensorboard = "^2.16.2"
+tqdm = "^4.66.2"
+
+[tool.poetry.group.gdown.dependencies]
+gdown = "^5.1.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+#[tool.poetry.scripts]
+
+[tool.ruff]
+line-length = 79
+indent-width = 2
+exclude = [".venv", ".env", ".git", "tests"]
+
+
+[tool.ruff.lint]
+# Add the `line-too-long` rule to the enforced rule set. By default, Ruff omits rules that
+# overlap with the use of a formatter, like Black, but we can override this behavior by
+# explicitly adding the rule.
+extend-select = [
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "ERA", # flake8-eradicate/eradicate
+    "I",   # isort
+    "N",   # pep8-naming
+    "PIE", # flake8-pie
+    "PGH", # pygrep
+    "RUF", # ruff checks
+    "SIM", # flake8-simplify
+    "T20", # flake8-print
+    "TCH", # flake8-type-checking
+    "TID", # flake8-tidy-imports
+    "UP",  # pyupgrade
+]
+fixable = ["ALL"]
+ignore = ["SIM117"]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+lines-after-imports = 2
+known-first-party = ["{{ cookiecutter.package_name }}"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
