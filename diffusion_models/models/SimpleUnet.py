@@ -4,6 +4,10 @@ import math
 import torch
 from torch import nn
 
+from diffusion_models.gaussian_diffusion.gaussian_diffuser import \
+  GaussianDiffuser
+from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
+
 
 class Block(nn.Module):
   def __init__(self, in_ch, out_ch, time_emb_dim, up=False):
@@ -55,16 +59,17 @@ class SinusoidalPositionEmbeddings(nn.Module):
     return embeddings
 
 
-class SimpleUnet(nn.Module):
+class SimpleUnet(BaseDiffusionModel):
   """
   A simplified variant of the Unet architecture.
   """
 
   def __init__(
     self,
+    diffuser: GaussianDiffuser,
     image_channels: int,
   ):
-    super().__init__()
+    super().__init__(diffuser=diffuser)
     image_channels = image_channels
     down_channels = (64, 128, 256, 512, 1024)
     up_channels = (1024, 512, 256, 128, 64)
@@ -100,6 +105,9 @@ class SimpleUnet(nn.Module):
     self.output = nn.Conv2d(up_channels[-1], out_dim, 1)
 
   def forward(self, x, timestep):
+    # if self.training:
+    #   x = self.augmentations(x)
+
     # Embedd time
     t = self.time_mlp(timestep)
     # Initial conv
