@@ -1,10 +1,12 @@
 import abc
-from typing import List, Tuple
+from typing import List
+from typing import Tuple
 
 import torch
 
-from diffusion_models.gaussian_diffusion.beta_schedulers import \
-  BaseBetaScheduler
+from diffusion_models.gaussian_diffusion.beta_schedulers import (
+  BaseBetaScheduler,
+)
 
 
 class BaseDiffuser(abc.ABC):
@@ -12,7 +14,9 @@ class BaseDiffuser(abc.ABC):
     self.beta_scheduler = beta_scheduler
 
   @abc.abstractmethod
-  def diffuse_batch(self, images: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+  def diffuse_batch(
+    self, images: torch.Tensor
+  ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     pass
 
   @abc.abstractmethod

@@ -1,14 +1,19 @@
 import pathlib
-from typing import Callable, Dict, Optional
+from typing import Callable
+from typing import Dict
+from typing import Optional
 
 import torch
 from torch.nn import functional as F
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
 from tqdm import tqdm
 
 from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
-from diffusion_models.utils.schemas import Checkpoint, LogConfiguration, \
-  TrainingConfiguration, BetaSchedulerConfiguration
+from diffusion_models.utils.schemas import BetaSchedulerConfiguration
+from diffusion_models.utils.schemas import Checkpoint
+from diffusion_models.utils.schemas import LogConfiguration
+from diffusion_models.utils.schemas import TrainingConfiguration
 from diffusion_models.utils.tensorboard import TensorboardManager
 
 

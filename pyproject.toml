@@ -12,17 +12,16 @@ packages = [
 python = ">=3.9,<3.12"
 pillow-simd = "^9.0.0.post1"
 tqdm = "^4.66.2"
-numpy = "^2.0.1"
+numpy = "^1.26.4"
 torchvision = "^0.19.0"
 torch = "^2.4.0"
 tensorboard = "^2.17.0"
-
 
 [tool.poetry.group.gdown.dependencies]
 gdown = "^5.1.0"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.4.8"
+ruff = "^0.5.5"
 
 [build-system]
 requires = ["poetry-core"]
@@ -32,7 +31,6 @@ build-backend = "poetry.core.masonry.api"
 line-length = 79
 indent-width = 2
 exclude = [".venv", ".env", ".git", "tests"]
-
 
 [tool.ruff.lint]
 # Add the `line-too-long` rule to the enforced rule set. By default, Ruff omits rules that
@@ -59,7 +57,7 @@ ignore = ["SIM117"]
 [tool.ruff.lint.isort]
 force-single-line = true
 lines-after-imports = 2
-known-first-party = ["{{ cookiecutter.package_name }}"]
+known-first-party = ["diffusion_models"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -69,3 +67,4 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+docstring-code-format = true

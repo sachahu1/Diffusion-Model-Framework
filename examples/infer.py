@@ -1,22 +1,21 @@
 from torchvision.transforms import v2
 
-from diffusion_models.gaussian_diffusion.gaussian_diffuser import \
-  GaussianDiffuser
 from diffusion_models.diffusion_inference import DiffusionInference
+from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
+  GaussianDiffuser,
+)
 from diffusion_models.models.SimpleUnet import SimpleUnet
 from diffusion_models.utils.schemas import Checkpoint
 
+
 if __name__ == "__main__":
-  checkpoint_file_path = (
-    "your_checkpoint.pt"
-  )
+  checkpoint_file_path = "your_checkpoint.pt"
 
   checkpoint = Checkpoint.from_file(checkpoint_file_path)
   gaussian_diffuser = GaussianDiffuser.from_checkpoint(checkpoint)
 
   model = SimpleUnet(
-    image_channels=checkpoint.image_channels,
-    diffuser=gaussian_diffuser
+    image_channels=checkpoint.image_channels, diffuser=gaussian_diffuser
   )
   model.load_state_dict(checkpoint.model_state_dict)
   # model = model.compile(mode="reduce-overhead", fullgraph=True)
@@ -24,7 +23,7 @@ if __name__ == "__main__":
   reverse_transforms = v2.Compose(
     [
       v2.Lambda(lambda x: (x + 1) / 2),
-      v2.Resize((128, 128))
+      v2.Resize((128, 128)),
     ]
   )
 

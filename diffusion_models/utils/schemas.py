@@ -1,13 +1,17 @@
 import dataclasses
 import pathlib
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
 
 import torch
 from torch.cuda.amp import GradScaler
 
-from diffusion_models.gaussian_diffusion.beta_schedulers import \
-  BaseBetaScheduler
+from diffusion_models.gaussian_diffusion.beta_schedulers import (
+  BaseBetaScheduler,
+)
 
 
 @dataclass
@@ -32,11 +36,13 @@ class LogConfiguration:
   number_of_images: int = 5
   # metrics: Dict[str, float] # TODO: consider Dict[str, Callable]
 
+
 @dataclass
 class BetaSchedulerConfiguration:
   steps: int
   betas: torch.Tensor
   alpha_bars: torch.Tensor
+
 
 @dataclass
 class Checkpoint:
@@ -55,12 +61,15 @@ class Checkpoint:
   def from_file(cls, file_path: str) -> "Checkpoint":
     checkpoint = torch.load(f=file_path)
     checkpoint = cls(**checkpoint)
-    beta_scheduler_config = BetaSchedulerConfiguration(**checkpoint.beta_scheduler_config)
+    beta_scheduler_config = BetaSchedulerConfiguration(
+      **checkpoint.beta_scheduler_config
+    )
     checkpoint.beta_scheduler_config = beta_scheduler_config
     return checkpoint
 
   def to_file(self, file_path: Union[str, pathlib.Path]) -> None:
     torch.save(dataclasses.asdict(self), file_path)
+
 
 @dataclass
 class OldCheckpoint:
@@ -89,6 +98,5 @@ class OldCheckpoint:
       alpha_bars=beta_scheduler.alpha_bars,
     )
     return Checkpoint(
-      **dataclasses.asdict(self),
-      beta_scheduler_config=beta_scheduler_config
+      **dataclasses.asdict(self), beta_scheduler_config=beta_scheduler_config
     )

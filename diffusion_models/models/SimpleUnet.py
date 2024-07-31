@@ -4,8 +4,9 @@ import math
 import torch
 from torch import nn
 
-from diffusion_models.gaussian_diffusion.gaussian_diffuser import \
-  GaussianDiffuser
+from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
+  GaussianDiffuser,
+)
 from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
 
 
