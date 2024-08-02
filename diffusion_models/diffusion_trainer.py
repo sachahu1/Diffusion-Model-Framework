@@ -4,21 +4,13 @@ from typing import Dict
 from typing import Optional
 
 import torch
-from torch import amp
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from diffusion_models.gaussian_diffusion.beta_schedulers import (
-  BaseBetaScheduler,
-)
-from diffusion_models.gaussian_diffusion.beta_schedulers import (
-  LinearBetaScheduler,
-)
-from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
-  GaussianDiffuser,
-)
+from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
+from diffusion_models.utils.schemas import BetaSchedulerConfiguration
 from diffusion_models.utils.schemas import Checkpoint
 from diffusion_models.utils.schemas import LogConfiguration
 from diffusion_models.utils.schemas import TrainingConfiguration
@@ -28,12 +20,11 @@ from diffusion_models.utils.tensorboard import TensorboardManager
 class DiffusionTrainer:
   def __init__(
     self,
-    model: torch.nn.Module,
+    model: BaseDiffusionModel,
     dataset: Dataset,
     optimizer: torch.optim.Optimizer,
     training_configuration: TrainingConfiguration,
     loss_function: Callable = F.l1_loss,
-    beta_scheduler: BaseBetaScheduler = LinearBetaScheduler(),
     scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
     log_configuration: LogConfiguration = LogConfiguration(),
     reverse_transforms: Callable = lambda x: x,
@@ -45,11 +36,6 @@ class DiffusionTrainer:
     self.training_configuration = training_configuration
     self.scheduler = scheduler
     self.device = device
-
-    self.beta_scheduler = beta_scheduler
-    self.gaussian_diffuser = GaussianDiffuser(
-      beta_scheduler=beta_scheduler,
-    ).to(device)
 
     self.dataloader = DataLoader(
       dataset=dataset,
@@ -63,7 +49,10 @@ class DiffusionTrainer:
 
     self._image_shape = dataset[0][0].shape
 
-    self.scaler = torch.cuda.amp.GradScaler()
+    self.scaler = torch.amp.GradScaler(
+      device=device
+      # init_scale=8192,
+    )
 
     self.log_configuration = log_configuration
 
@@ -79,6 +68,8 @@ class DiffusionTrainer:
 
     self.reverse_transforms = reverse_transforms
 
+    torch.backends.cudnn.benchmark = True
+
   def save_checkpoint(self, epoch: int, checkpoint_name: str):
     checkpoint = Checkpoint(
       epoch=epoch,
@@ -87,6 +78,12 @@ class DiffusionTrainer:
       scaler=self.scaler.state_dict()
       if self.training_configuration.mixed_precision_training
       else None,
+      image_channels=self._image_shape[0],
+      beta_scheduler_config=BetaSchedulerConfiguration(
+        steps=self.model.diffuser.beta_scheduler.steps,
+        betas=self.model.diffuser.beta_scheduler.betas,
+        alpha_bars=self.model.diffuser.beta_scheduler.alpha_bars,
+      ),
       tensorboard_run_name=self.tensorboard_manager.summary_writer.log_dir,
     )
     checkpoint.to_file(self.checkpoint_path / checkpoint_name)
@@ -102,19 +99,28 @@ class DiffusionTrainer:
         images, _ = batch
         images = images.to(self.device)
 
-        noisy_images, noise, timesteps = self.gaussian_diffuser.diffuse_batch(
-          images=images
-        )
+        noisy_images, noise, timesteps = self.model.diffuse(images=images)
 
-        with amp.autocast(
+        self.optimizer.zero_grad(set_to_none=True)
+
+        with torch.autocast(
           device_type=self.device,
           enabled=self.training_configuration.mixed_precision_training,
         ):
           prediction = self.model(noisy_images, timesteps)
           loss = self.loss_function(noise, prediction)
 
-        self.optimizer.zero_grad(set_to_none=True)
         self.scaler.scale(loss).backward()
+
+        if self.training_configuration.gradient_clip is not None:
+          # Unscales the gradients of optimizer's assigned params in-place
+          self.scaler.unscale_(self.optimizer)
+
+          # Since the gradients of optimizer's assigned params are unscaled, clips as usual:
+          torch.nn.utils.clip_grad_norm_(
+            self.model.parameters(),
+            max_norm=self.training_configuration.gradient_clip,
+          )
 
         self.scaler.step(self.optimizer)
         self.scaler.update()
@@ -134,6 +140,7 @@ class DiffusionTrainer:
 
   @torch.no_grad()
   def log_to_tensorboard(self, metrics: Dict[str, float], global_step: int):
+    self.model.eval()
     if global_step % self.log_configuration.log_rate == 0:
       self.tensorboard_manager.log_metrics(
         metrics=metrics, global_step=global_step
@@ -152,7 +159,7 @@ class DiffusionTrainer:
         ),
         device=self.device,
       )
-      images = self.gaussian_diffuser.denoise_batch(images, self.model)
+      images = self.model.denoise(images)
       for step, images in enumerate(images[::-1]):
         self.tensorboard_manager.log_images(
           tag=f"Images at timestep {global_step}",
