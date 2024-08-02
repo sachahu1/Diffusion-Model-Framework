@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "diffusion-models"
-version = "0.1.0"
+name = "diffusion-model-framework"
+version = "0.1.0a0"
 description = ""
 authors = ["Sacha Hu <sachahu@mindsparkai.com>"]
 readme = "README.md"
@@ -17,11 +17,25 @@ torchvision = "^0.19.0"
 torch = "^2.4.0"
 tensorboard = "^2.17.0"
 
+[tool.poetry.group.gdown]
+optional = true
+
 [tool.poetry.group.gdown.dependencies]
 gdown = "^5.1.0"
 
+[tool.poetry.group.dev]
+optional = true
+
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.5.5"
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+pytest = "^6.2.5"
+pytest-mock = "^3.14.0"
+coverage = {version = "^6.4.2", extras = ["toml"]}
 
 [build-system]
 requires = ["poetry-core"]
@@ -57,7 +71,7 @@ ignore = ["SIM117"]
 [tool.ruff.lint.isort]
 force-single-line = true
 lines-after-imports = 2
-known-first-party = ["diffusion_models"]
+known-first-party = ["diffusion_model-framework"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
