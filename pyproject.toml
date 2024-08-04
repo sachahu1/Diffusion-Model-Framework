@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "diffusion-model-framework"
-version = "0.1.0a0"
+version = "0.0.1"
 description = ""
 authors = ["Sacha Hu <sachahu@mindsparkai.com>"]
 readme = "README.md"
@@ -38,8 +38,8 @@ pytest-mock = "^3.14.0"
 coverage = {version = "^6.4.2", extras = ["toml"]}
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.ruff]
 line-length = 79
@@ -82,3 +82,28 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 docstring-code-format = true
+
+[tool.semantic_release]
+version_variables = [
+    "diffusion_models/__init__.py:__version__",
+#    "docs/conf.py:version",
+]
+version_toml = [
+    "pyproject.toml:tool.poetry.version"
+]
+upload_to_pypi = false
+upload_to_release = true
+
+[tool.semantic_release.branches.main]
+match = "(main|master)"
+prerelease = false
+
+[tool.semantic_release.branches.dev]
+match = "dev"
+prerelease = true
+prerelease_token = "rc"
+
+[tool.semantic_release.branches."feature/*"]
+match = "(feature/*)"
+prerelease = true
+prerelease_token = "alpha"
