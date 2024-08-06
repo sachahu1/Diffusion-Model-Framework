@@ -24,7 +24,7 @@ That's it, the package is installed. Move to the next section to learn how to us
 ## Getting Started
 < Add instructions on how to use project here >
 ## Building the documentation
-To build the documentation you can simply use the docker image. To do so, simply run:
+The documentation can be built using Sphinx by running:
 ```shell
-docker build . -f Dockerfile --target documentation -t {{cookiecutter.package_name}}-docs
+sphinx-build -M html docs/source/ docs/build
 ```
