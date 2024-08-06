@@ -1,9 +1,14 @@
 # Diffusion Model Playground
 
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/sachahu1/Diffusion-Model-Framework/run-tests.yaml?branch=main&label=Tests)
+![GitHub Release](https://img.shields.io/github/v/release/sachahu1/Diffusion-Model-Framework)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/diffusion-model-framework)
+![GitHub Repo stars](https://img.shields.io/github/stars/sachahu1/Diffusion-Model-Framework)
+
 This repo is a playground for implementing, training and visualising diffusion 
 models.
 
-![](./assets/sampling-small.gif)
+![](https://github.com/sachahu1/Diffusion-Model-Framework/main/assets/sampling-small.gif)
 
 # Getting Started
 This tool uses the [poetry python manager](https://python-poetry.org/).

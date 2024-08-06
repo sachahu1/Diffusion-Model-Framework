@@ -1,3 +1,18 @@
+"""Running inference.
+
+Below is a code example of an indference script. Simply plug in your own
+checkpoint and start running inference. To extend this further, you might
+want to look into compiling your model to ONNX, TensorRT, OpenVino or other
+formats.
+
+.. literalinclude:: /../../examples/train_model.py
+   :language: python
+   :linenos:
+   :lines: 16-50
+"""
+
+__all__ = []
+
 from torchvision.transforms import v2
 
 from diffusion_models.diffusion_inference import DiffusionInference
