@@ -1,5 +1,5 @@
 Diffusion-Model-Framework Documentation
-===================================
+=======================================
 
 .. toctree::
    :maxdepth: 2

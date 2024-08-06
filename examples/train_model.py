@@ -1,3 +1,16 @@
+"""Running a simple training script.
+
+Below is a simple example of a training script. It contains basic configurations
+for a simple diffusion model and constitutes a good starting point.
+
+.. literalinclude:: /../../examples/train_model.py
+   :language: python
+   :linenos:
+   :lines: 14-97
+"""
+
+__all__ = []
+
 from torch.nn import functional as F
 from torch.optim import AdamW
 from torchvision import datasets
@@ -7,11 +20,13 @@ from diffusion_models.diffusion_trainer import DiffusionTrainer
 from diffusion_models.gaussian_diffusion.beta_schedulers import (
   LinearBetaScheduler,
 )
-from diffusion_models.gaussian_diffusion.gaussian_diffuser import \
-  GaussianDiffuser
+from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
+  GaussianDiffuser,
+)
 from diffusion_models.models.SimpleUnet import SimpleUnet
-from diffusion_models.utils.schemas import LogConfiguration, \
-  TrainingConfiguration
+from diffusion_models.utils.schemas import LogConfiguration
+from diffusion_models.utils.schemas import TrainingConfiguration
+
 
 if __name__ == "__main__":
   image_size = 64
@@ -55,10 +70,7 @@ if __name__ == "__main__":
   )
 
   reverse_transforms = v2.Compose(
-    [
-      v2.Lambda(lambda x: (x + 1) / 2),
-      v2.Resize((128, 128))
-    ]
+    [v2.Lambda(lambda x: (x + 1) / 2), v2.Resize((128, 128))]
   )
 
   # Define Dataset

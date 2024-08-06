@@ -15,6 +15,7 @@ import sys
 
 import git
 
+
 sys.path.insert(0, os.path.abspath("../../"))
 
 
@@ -30,7 +31,7 @@ release = "0.0.1"
 source_suffix = {
   ".rst": "restructuredtext",
   ".txt": "restructuredtext",
-  ".md": "markdown"
+  ".md": "markdown",
 }
 
 # -- General configuration ---------------------------------------------------
@@ -58,15 +59,15 @@ extensions = [
 autodoc_typehints = "description"
 autodoc_typehints_description_target = "documented"
 simplify_optional_unions = False
-# autodoc_typehints_format = "short"
-# python_use_unqualified_type_names = True
 
 # -- Options for viewCode extension -------------------------------------------
 viewcode_line_numbers = True
 
 # -- Options for CopyButton extension -----------------------------------------
 copybutton_prompt_text = ">>> "
-copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_text = (
+  r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+)
 copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
 copybutton_remove_prompts = True
@@ -104,11 +105,6 @@ add_module_names = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
-html_sidebars = {
-    '**': [
-        'versioning.html',
-    ],
-}
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -127,10 +123,10 @@ autoapi_keep_files = False
 # -- Options for intersphinx extension ---------------------------------------
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3/", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "torch": ("https://pytorch.org/docs/stable/", None),
-    "pandas": ("https://pandas.pydata.org/docs/", None),
+  "python": ("https://docs.python.org/3/", None),
+  "numpy": ("https://numpy.org/doc/stable/", None),
+  "torch": ("https://pytorch.org/docs/stable/", None),
+  "pandas": ("https://pandas.pydata.org/docs/", None),
 }
 
 
@@ -140,7 +136,9 @@ intersphinx_mapping = {
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
-html_theme_path = ["_themes", ]
+html_theme_path = [
+  "_themes",
+]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -148,31 +146,29 @@ html_theme_path = ["_themes", ]
 html_static_path = ["_static"]
 
 html_theme_options = {
-    "display_version": True,
-    "prev_next_buttons_location": "bottom",
-    "style_external_links": False,
-    # Toc options
-    "collapse_navigation": False,
-    "sticky_navigation": True,
-    "navigation_depth": 4,
-    "titles_only": True
+  "display_version": True,
+  "prev_next_buttons_location": "bottom",
+  "style_external_links": False,
+  # Toc options
+  "collapse_navigation": False,
+  "sticky_navigation": True,
+  "navigation_depth": 4,
+  "titles_only": True,
 }
 
 repo = git.Repo(search_parent_directories=True)
 versions = [
-  (tag_ref.name, f"/pages/{tag_ref.name}") for tag_ref in git.Repo("../../").tags
+  (tag_ref.name, f"https://www.sachahu.com/docs/diffusion-model-framework/pages/{tag_ref.name}")
+  for tag_ref in git.Repo("../../").tags
 ]
 
-versions.append(
-  ("latest", "/latest")
-)
+versions.append(("latest", "https://www.sachahu.com/docs/diffusion-model-framework/latest"))
 
 html_context = {
-  'current_version': "0.0.1",
-  'versions': versions,
-  # 'current_language': 'en',
-  # 'languages': [["en", "link to en"], ["de", "link to de"]]
+  "current_version": "0.0.1",
+  "versions": versions,
 }
+
 
 # Enable eval_rst in markdown
 def setup(app):
@@ -187,5 +183,3 @@ def setup(app):
     objname="configuration value",
     indextemplate="pair: %s; configuration value",
   )
-
-

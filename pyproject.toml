@@ -4,6 +4,8 @@ version = "0.0.1"
 description = ""
 authors = ["Sacha Hu <sachahu@mindsparkai.com>"]
 readme = "README.md"
+documentation = "https://www.sachahu.com/docs/diffusion-model-framework/latest/index.html"
+repository = "https://github.com/sachahu1/Diffusion-Model-Framework"
 packages = [
     { include = "diffusion_models" }
 ]
