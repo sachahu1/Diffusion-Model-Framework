@@ -1,0 +1,124 @@
+[tool.poetry]
+name = "diffusion-model-framework"
+version = "0.0.1"
+description = ""
+authors = ["Sacha Hu <sachahu@mindsparkai.com>"]
+readme = "README.md"
+documentation = "https://www.sachahu.com/docs/diffusion-model-framework/latest/index.html"
+repository = "https://github.com/sachahu1/Diffusion-Model-Framework"
+packages = [
+    { include = "diffusion_models" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+pillow-simd = "^9.0.0.post1"
+tqdm = "^4.66.2"
+numpy = "^1.26.4"
+torchvision = "^0.19.0"
+torch = "^2.4.0"
+tensorboard = "^2.17.0"
+
+[tool.poetry.group.gdown]
+optional = true
+
+[tool.poetry.group.gdown.dependencies]
+gdown = "^5.1.0"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.5.5"
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+pytest = "^6.2.5"
+pytest-mock = "^3.14.0"
+coverage = {version = "^6.4.2", extras = ["toml"]}
+
+[tool.poetry.group.documentation]
+optional = true
+
+[tool.poetry.group.documentation.dependencies]
+Sphinx = "^7.3.7"
+sphinxcontrib-napoleon = "^0.7"
+sphinx-rtd-theme = "^2.0.0"
+myst-parser = "^3.0.1"
+sphinx-copybutton = "^0.5.2"
+sphinx-autoapi = "^3.2.1"
+gitpython = "^3.1.43"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.ruff]
+line-length = 79
+indent-width = 2
+exclude = [".venv", ".env", ".git", "tests"]
+
+[tool.ruff.lint]
+# Add the `line-too-long` rule to the enforced rule set. By default, Ruff omits rules that
+# overlap with the use of a formatter, like Black, but we can override this behavior by
+# explicitly adding the rule.
+extend-select = [
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "ERA", # flake8-eradicate/eradicate
+    "I",   # isort
+    "N",   # pep8-naming
+    "PIE", # flake8-pie
+    "PGH", # pygrep
+    "RUF", # ruff checks
+    "SIM", # flake8-simplify
+    "T20", # flake8-print
+    "TCH", # flake8-type-checking
+    "TID", # flake8-tidy-imports
+    "UP",  # pyupgrade
+]
+fixable = ["ALL"]
+ignore = ["SIM117"]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+lines-after-imports = 2
+known-first-party = ["diffusion_model-framework"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+
+[tool.semantic_release]
+version_variables = [
+    "diffusion_models/__init__.py:__version__",
+    "docs/source/conf.py:release",
+    "docs/source/conf.py:html_context.current_version",
+]
+version_toml = [
+    "pyproject.toml:tool.poetry.version"
+]
+upload_to_pypi = false
+upload_to_release = true
+
+[tool.semantic_release.branches.main]
+match = "(main|master)"
+prerelease = false
+
+[tool.semantic_release.branches.dev]
+match = "dev"
+prerelease = true
+prerelease_token = "rc"
+
+[tool.semantic_release.branches."feature/*"]
+match = "(feature/*)"
+prerelease = true
+prerelease_token = "alpha"
