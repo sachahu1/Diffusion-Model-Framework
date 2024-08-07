@@ -1,9 +1,9 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows: ["Run Tests"]
-    types: [completed]
+  pull_request:
+    types:
+      - closed
     branches:
       - main
       - dev
@@ -15,6 +15,7 @@ env:
 
 jobs:
   release:
+    if: github.event.pull_request.merged == 'true'
     name: Release pushed tag
     runs-on: ubuntu-22.04
     permissions:
