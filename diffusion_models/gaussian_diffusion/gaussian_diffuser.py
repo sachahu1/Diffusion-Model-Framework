@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import torch
 from tqdm import tqdm
@@ -12,11 +12,28 @@ from diffusion_models.utils.schemas import Checkpoint
 
 class GaussianDiffuser(BaseDiffuser):
   def __init__(self, beta_scheduler: BaseBetaScheduler):
+    """Initializes the class instance.
+
+    Args:
+      beta_scheduler (BaseBetaScheduler): The beta scheduler instance to be used.
+
+    """
     super().__init__(beta_scheduler)
-    self.device = "cuda"
+    self.device: str = "cpu"
+    """The device to use. Defaults to cpu."""
 
   @classmethod
   def from_checkpoint(cls, checkpoint: Checkpoint) -> "GaussianDiffuser":
+    """Instantiate a Gaussian Diffuser from a training checkpoint.
+
+    Args:
+      checkpoint: The training checkpoint object containing
+        the trained model's parameters and configuration.
+
+    Returns:
+      An instance of the GaussianDiffuser class initialized with the parameters
+      loaded from the given checkpoint.
+    """
     return cls(
       beta_scheduler=BaseBetaScheduler.from_tensors(
         steps=checkpoint.beta_scheduler_config.steps,
@@ -26,11 +43,41 @@ class GaussianDiffuser(BaseDiffuser):
     )
 
   def to(self, device: str = "cpu"):
+    """Moves the data to the specified device.
+
+    This performs a similar behaviour to the `to` method of PyTorch. moving the
+    GaussianDiffuser and the BetaScheduler to the specified device.
+
+    Args:
+      device: The device to which the method should move the object.
+        Default is "cpu".
+
+    Example:
+      >>> gaussian_diffuser = GaussianDiffuser()
+      >>> gaussian_diffuser = gaussian_diffuser.to(device="cuda")
+    """
     self.device = device
     self.beta_scheduler = self.beta_scheduler.to(self.device)
     return self
 
-  def diffuse_batch(self, images):
+  def diffuse_batch(
+    self, images: torch.Tensor
+  ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Diffuse a batch of images.
+
+    Diffuse the given batch of images by adding noise based on the beta scheduler.
+
+    Args:
+      images: Batch of images to diffuse.\n
+        Shape should be ``(B, C, H, W)``.
+
+    Returns:
+      A tuple containing three tensors
+
+        - images: Diffused batch of images.
+        - noise: Noise added to the images.
+        - timesteps: Timesteps used for diffusion.
+    """
     timesteps = torch.randint(
       0, self.beta_scheduler.steps, (images.shape[0],), device=self.device
     )
@@ -69,6 +116,17 @@ class GaussianDiffuser(BaseDiffuser):
     images: torch.Tensor,
     model: torch.nn.Module,
   ) -> List[torch.Tensor]:
+    """Denoise a batch of images.
+
+    This denoises a batch images. This is the image generation process.
+
+    Args:
+      images: A batch of noisy images.
+      model: The model to be used for denoising.
+
+    Returns:
+      A list of tensors containing a batch of denoised images.
+    """
     denoised_images = []
     for i in tqdm(range(self.beta_scheduler.steps)[::-1], desc="Denoising"):
       timestep = torch.full((images.shape[0],), i, device=self.device)
