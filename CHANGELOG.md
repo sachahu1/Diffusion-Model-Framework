@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.1.1-rc.2 (2024-08-07)
+
+### Fix
+
+* fix: pipeline build and release docs at the tag node ([`e56d111`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/e56d111d65f9fe1a47f70488a779125d42589030))
+
+### Unknown
+
+* Merge pull request #10 from sachahu1/ci/fix-pipeline
+
+fix: pipeline build and release docs at the tag node ([`bf6c44a`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/bf6c44a3e688dd2dd69f98f5918481ccfcbe5523))
+
 ## v0.1.1-rc.1 (2024-08-07)
 
 ### Documentation

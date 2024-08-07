@@ -26,7 +26,7 @@ copyright = "2024, MindsparkAI LTD."
 author = "Sacha Hu"
 
 # The full version, including alpha/beta/rc tags
-release = "0.1.1-rc.1"
+release = "0.1.1-rc.2"
 
 source_suffix = {
   ".rst": "restructuredtext",
