@@ -59,6 +59,9 @@ extensions = [
 autodoc_typehints = "description"
 autodoc_typehints_description_target = "documented"
 simplify_optional_unions = False
+autodoc_typehints_format = 'short'
+python_use_unqualified_type_names = True
+
 
 # -- Options for viewCode extension -------------------------------------------
 viewcode_line_numbers = True
@@ -165,7 +168,7 @@ versions = [
 versions.append(("latest", "https://www.sachahu.com/docs/diffusion-model-framework/latest"))
 
 html_context = {
-  "current_version": "0.0.1",
+  "current_version": release,
   "versions": versions,
 }
 
