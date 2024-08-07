@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, TYPE_CHECKING
 
 import torch
 from tqdm import tqdm
@@ -9,6 +9,8 @@ from diffusion_models.gaussian_diffusion.beta_schedulers import (
 )
 from diffusion_models.utils.schemas import Checkpoint
 
+if TYPE_CHECKING:
+  from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
 
 class GaussianDiffuser(BaseDiffuser):
   def __init__(self, beta_scheduler: BaseBetaScheduler):
@@ -114,7 +116,7 @@ class GaussianDiffuser(BaseDiffuser):
   def denoise_batch(
     self,
     images: torch.Tensor,
-    model: torch.nn.Module,
+    model: "BaseDiffusionModel",
   ) -> List[torch.Tensor]:
     """Denoise a batch of images.
 

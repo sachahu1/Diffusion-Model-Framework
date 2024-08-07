@@ -40,7 +40,7 @@ class BaseBetaScheduler:
     """Enforce terminal SNR by adjusting :math:`\\beta` and :math:`\\bar{\\alpha}`.
 
     This method enforces zero terminal SNR according to
-    "Common Diffusion Noise Schedules and Sample Steps are Flawed"
+    `"Common Diffusion Noise Schedules and Sample Steps are Flawed"
     <https://arxiv.org/abs/2305.08891>`_.
     """
     alpha_bar_length = len(self.alpha_bars)
