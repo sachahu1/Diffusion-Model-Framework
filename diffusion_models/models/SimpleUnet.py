@@ -61,15 +61,17 @@ class SinusoidalPositionEmbeddings(nn.Module):
 
 
 class SimpleUnet(BaseDiffusionModel):
-  """
-  A simplified variant of the Unet architecture.
-  """
-
   def __init__(
     self,
     diffuser: GaussianDiffuser,
     image_channels: int,
   ):
+    """A Simplified variant of the Unet architecture used in DDPM.
+
+    Args:
+      diffuser: A gaussian diffuser.
+      image_channels: The number of image channels.
+    """
     super().__init__(diffuser=diffuser)
     image_channels = image_channels
     down_channels = (64, 128, 256, 512, 1024)

@@ -33,17 +33,17 @@ if __name__ == "__main__":
   image_channels = 3
 
   training_configuration = TrainingConfiguration(
-    batch_size=128,
+    batch_size=256,
     learning_rate=2 * 10e-4,
     number_of_epochs=500,
-    training_name="SimpleTraining",
+    training_name="ReworkedFrameworkBase",
     checkpoint_rate=100,
-    mixed_precision_training=True,
-    gradient_clip=1.0,
+    mixed_precision_training=False,
+    # gradient_clip=0.1,
   )
   log_configuration = LogConfiguration(
     log_rate=10,
-    image_rate=5000,
+    image_rate=635,
     number_of_images=5,
   )
   model = SimpleUnet(
@@ -77,6 +77,11 @@ if __name__ == "__main__":
   dataset = datasets.CelebA(
     root="../data", download=False, transform=image_transforms, split="train"
   )
+  # dataset = datasets.MNIST(
+  #   transform=image_transforms,
+  #   root="../data",
+  #   download=True
+  # )
 
   # Instantiate DiffusionTrainer
   trainer = DiffusionTrainer(
