@@ -1,19 +1,14 @@
 import pathlib
-from typing import Callable
-from typing import Dict
-from typing import Optional
+from typing import Callable, Dict
 
 import torch
 from torch.nn import functional as F
-from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
-from diffusion_models.utils.schemas import BetaSchedulerConfiguration
-from diffusion_models.utils.schemas import Checkpoint
-from diffusion_models.utils.schemas import LogConfiguration
-from diffusion_models.utils.schemas import TrainingConfiguration
+from diffusion_models.utils.schemas import BetaSchedulerConfiguration, \
+  Checkpoint, LogConfiguration, TrainingConfiguration
 from diffusion_models.utils.tensorboard import TensorboardManager
 
 
@@ -25,17 +20,36 @@ class DiffusionTrainer:
     optimizer: torch.optim.Optimizer,
     training_configuration: TrainingConfiguration,
     loss_function: Callable = F.l1_loss,
-    scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
+    # scheduler: Optional[torch.optim.lr_scheduler.StepLR] = None,
     log_configuration: LogConfiguration = LogConfiguration(),
     reverse_transforms: Callable = lambda x: x,
     device: str = "cuda",
   ):
+    """A diffusion trainer framework.
+
+    This is a simplified framework for training a diffusion models.
+
+    Args:
+      model: A diffusion model.
+      dataset: A dataset to train on.
+      optimizer: The optimizer to use.
+      training_configuration: The training configuration to use.
+      loss_function: The loss function to use.
+      log_configuration: The logging configuration to use.
+      reverse_transforms: The reverse transforms to use.
+      device: The device to use.
+    """
     self.model = model.to(device)
+    """The diffusion model to use."""
     self.optimizer = optimizer
+    """The optimizer to use."""
     self.loss_function = loss_function
+    """The loss function to use."""
     self.training_configuration = training_configuration
-    self.scheduler = scheduler
+    """The training configuration to use."""
+    # self.scheduler = scheduler
     self.device = device
+    """The device to use."""
 
     self.dataloader = DataLoader(
       dataset=dataset,
@@ -46,6 +60,7 @@ class DiffusionTrainer:
       pin_memory=True,
       persistent_workers=True,
     )
+    """A torch dataloader."""
 
     self._image_shape = dataset[0][0].shape
 
@@ -53,24 +68,35 @@ class DiffusionTrainer:
       device=device
       # init_scale=8192,
     )
+    """A torch GradScaler object."""
 
     self.log_configuration = log_configuration
+    """A LogConfiguration object."""
 
     self.checkpoint_path = (
       pathlib.Path("../checkpoints")
       / self.training_configuration.training_name
     )
+    """The path to save checkpoints."""
 
     self.checkpoint_path.mkdir(exist_ok=True)
     self.tensorboard_manager = TensorboardManager(
       log_name=self.training_configuration.training_name,
     )
+    """A tensorboard manager instance."""
 
     self.reverse_transforms = reverse_transforms
+    """A set of reverse transforms."""
 
     torch.backends.cudnn.benchmark = True
 
   def save_checkpoint(self, epoch: int, checkpoint_name: str):
+    """Save a checkpoint.
+
+    Args:
+      epoch: The current epoch.
+      checkpoint_name: The name of the checkpoint.
+    """
     checkpoint = Checkpoint(
       epoch=epoch,
       model_state_dict=self.model.state_dict(),
@@ -89,6 +115,7 @@ class DiffusionTrainer:
     checkpoint.to_file(self.checkpoint_path / checkpoint_name)
 
   def train(self):
+    """Start the diffusion training."""
     self.model.train()
     for epoch in range(self.training_configuration.number_of_epochs):
       for step, batch in enumerate(
@@ -140,6 +167,14 @@ class DiffusionTrainer:
 
   @torch.no_grad()
   def log_to_tensorboard(self, metrics: Dict[str, float], global_step: int):
+    """Log to tensorboard.
+
+    This method logs some useful metrics and visualizations to tensorboard.
+
+    Args:
+      metrics: A dictionary mapping metric names to values.
+      global_step: The current global step.
+    """
     self.model.eval()
     if global_step % self.log_configuration.log_rate == 0:
       self.tensorboard_manager.log_metrics(
