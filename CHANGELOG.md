@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.1.1 (2024-08-08)
+
+### Unknown
+
+* Merge pull request #13 from sachahu1/dev
+
+Release documentation and fixed CI/CD pipeline ([`4f7fae9`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/4f7fae94864190ee9c6fce9808255bd22ec0369b))
+
 ## v0.1.1-rc.4 (2024-08-08)
 
 ### Fix
