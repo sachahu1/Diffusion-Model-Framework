@@ -92,7 +92,7 @@ class Checkpoint:
     Returns:
       A checkpoint instance.
     """
-    checkpoint = torch.load(f=file_path)
+    checkpoint = torch.load(f=file_path, weights_only=True)
     checkpoint = cls(**checkpoint)
     beta_scheduler_config = BetaSchedulerConfiguration(
       **checkpoint.beta_scheduler_config
