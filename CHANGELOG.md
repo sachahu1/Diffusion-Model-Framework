@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## v0.1.2-rc.2 (2024-08-08)
+
+### Fix
+
+* fix: torch load weights only as security issue ([`6fb7d39`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/6fb7d394440f51e1acb1c90893b75cf2c74d3e1f))
+
+* fix: allow loading BetaScheduler without initialization ([`193bd96`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/193bd969d56129a708ef1d312fbd5430c5df2a30))
+
+* fix: remove unnecessary dependency ([`76b8ab1`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/76b8ab11b9498eee69556326a860a3cfd130d037))
+
+* fix: Release latest on main only ([`13568f2`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/13568f2dbdd33e4aa145f137d3143c79a904e51a))
+
+### Unknown
+
+* Merge pull request #15 from sachahu1/fix/only-release-latest-on-main
+
+fix: run inference from checkpoint ([`e80b03e`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/e80b03e89aa2be7398eda82acc843287ca384953))
+
 ## v0.1.2-rc.1 (2024-08-08)
 
 ### Fix
