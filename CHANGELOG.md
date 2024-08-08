@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.1.2-rc.1 (2024-08-08)
+
+### Fix
+
+* fix: give dispatch permissions to trigger CI ([`5f3333a`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/5f3333a598603ad9ff8abdeea31d77d1d3bf5154))
+
+### Unknown
+
+* Merge pull request #14 from sachahu1/ci/fix-dispatch-permissions
+
+fix: give dispatch permissions to trigger CI ([`1cc96f7`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/1cc96f72700d7b1e6b69744b7fa4a9d10f4908aa))
+
 ## v0.1.1 (2024-08-08)
 
 ### Unknown
