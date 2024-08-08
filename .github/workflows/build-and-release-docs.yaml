@@ -51,7 +51,10 @@ jobs:
           poetry run sphinx-build -M html docs/source/ docs/build
 
           aws s3 sync docs/build/html ${{ env.DOCS_UPLOAD_URI }}/pages/v$(poetry version --short) --delete
-          aws s3 sync docs/build/html ${{ env.DOCS_UPLOAD_URI }}/latest --delete
-
+          
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            aws s3 sync docs/build/html ${{ env.DOCS_UPLOAD_URI }}/latest --delete
+          fi
+          
           rm -rf docs/build
   
