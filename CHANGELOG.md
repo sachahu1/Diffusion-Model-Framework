@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.1.2-rc.3 (2024-08-08)
+
+### Fix
+
+* fix: map_location is needed for cpu ([`c918d3b`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/c918d3b37de7d09f1627ff8f4c395edf055d4e7e))
+
+### Unknown
+
+* Merge pull request #16 from sachahu1/fix/map-location-needed
+
+fix: map_location is needed for cpu ([`41206eb`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/41206ebfbab3971647052452b71803661f59b411))
+
 ## v0.1.2-rc.2 (2024-08-08)
 
 ### Fix
