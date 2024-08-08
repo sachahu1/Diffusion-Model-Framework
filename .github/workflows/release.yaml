@@ -72,5 +72,5 @@ jobs:
       - name: Invoke Documentation Workflow
         uses: benc-uk/workflow-dispatch@v1.2.4
         with:
-          workflow: Release
+          workflow: Build And Release Docs
 
