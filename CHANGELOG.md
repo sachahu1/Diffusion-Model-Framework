@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.1.1-rc.4 (2024-08-08)
+
+### Fix
+
+* fix: Mistake in workflow name ([`f80c59b`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/f80c59b11aaa461349650f5bf54972134911c673))
+
+### Unknown
+
+* Merge pull request #12 from sachahu1/fix/rename-workflow
+
+fix: Mistake in workflow name ([`09afacd`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/09afacda6b961489fab7608c71882fc3ce576ce6))
+
 ## v0.1.1-rc.3 (2024-08-08)
 
 ### Ci
