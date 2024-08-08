@@ -1,17 +1,10 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows: ["Run Tests"]
-    types: [completed]
+  push:
     branches:
       - main
       - dev
-
-env:
-  AWS_REGION: eu-west-2
-  AWS_OIDC_ROLE_ARN: arn:aws:iam::980416368045:role/GitHubAction-AssumeRoleWithAction
-  DOCS_UPLOAD_URI: s3://sachahu.com/docs/diffusion-model-framework
 
 jobs:
   release:
@@ -71,47 +64,13 @@ jobs:
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
-  build-release-docs:
+  trigger-docs:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write   # This is required for requesting the JWT
-      contents: read    # This is required for actions/checkout
+    needs:
+      - release
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - name: Invoke Documentation Workflow
+        uses: benc-uk/workflow-dispatch@v1.2.4
         with:
-          fetch-depth: 0
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "^3.9.0"
-      #----------------------------------------------
-      #  -----  install & configure poetry  -----
-      #----------------------------------------------
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      #----------------------------------------------
-      # install dependencies if cache does not exist
-      #----------------------------------------------
-      - name: Install dependencies
-        run: poetry install --only documentation
+          workflow: Build And Release Docs
 
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        with:
-          role-to-assume: ${{ env.AWS_OIDC_ROLE_ARN }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          aws-region: ${{ env.AWS_REGION }}
-      - name: Build and Deploy docs
-        run: |
-          poetry run sphinx-build -M html docs/source/ docs/build
-
-          aws s3 sync docs/build/html ${{ env.DOCS_UPLOAD_URI }}/pages/v$(poetry version --short) --delete
-          aws s3 sync docs/build/html ${{ env.DOCS_UPLOAD_URI }}/latest --delete
-
-          rm -rf docs/build
-  

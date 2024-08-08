@@ -1,5 +1,81 @@
 # CHANGELOG
 
+## v0.1.1-rc.4 (2024-08-08)
+
+### Fix
+
+* fix: Mistake in workflow name ([`f80c59b`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/f80c59b11aaa461349650f5bf54972134911c673))
+
+### Unknown
+
+* Merge pull request #12 from sachahu1/fix/rename-workflow
+
+fix: Mistake in workflow name ([`09afacd`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/09afacda6b961489fab7608c71882fc3ce576ce6))
+
+## v0.1.1-rc.3 (2024-08-08)
+
+### Ci
+
+* ci: Use workflow_dispatch to trigger docs ([`83c77e6`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/83c77e6f81b85f6964c7b2fdb0a0547f51ff4f73))
+
+### Fix
+
+* fix: commit forgotten __init__,py ([`c670b4a`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/c670b4a9cf922585776d3eb35ef8c21fd419c4a5))
+
+### Unknown
+
+* Merge pull request #11 from sachahu1/fix/build-docs-not-triggered
+
+Trigger doc release via workflow_dispatch ([`c737587`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/c737587cea206bdde74632db99a85232dacaef13))
+
+## v0.1.1-rc.2 (2024-08-07)
+
+### Fix
+
+* fix: pipeline build and release docs at the tag node ([`e56d111`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/e56d111d65f9fe1a47f70488a779125d42589030))
+
+### Unknown
+
+* Merge pull request #10 from sachahu1/ci/fix-pipeline
+
+fix: pipeline build and release docs at the tag node ([`bf6c44a`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/bf6c44a3e688dd2dd69f98f5918481ccfcbe5523))
+
+## v0.1.1-rc.1 (2024-08-07)
+
+### Documentation
+
+* docs: improved readme ([`ad8a5ff`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/ad8a5ffa9ffb5a5c7b1fc051190e04f663b9bf5e))
+
+* docs: document diffusion trainer ([`5fd5eb7`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/5fd5eb7117f62bb41360ee89f7e0456f0d37f4b9))
+
+* docs: short type hints and version fix ([`5da9b6e`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/5da9b6e5f5bf59c847a6b186b9dbb87483c797da))
+
+* docs: write introduction ([`22c9b8d`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/22c9b8d89e3412e8f49ca3947406d640f0f002bf))
+
+* docs: document rest of the library ([`d00dfb9`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/d00dfb942dce19a7abe986a40350ddf2a2142f7a))
+
+* docs: document GaussianDiffuser ([`d7c5dc1`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/d7c5dc1529c3365659572d3715361b0163c10a2d))
+
+* docs: document BetaSchedulers ([`3c162e6`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/3c162e6fde1db170e5577f546081da2676bc608f))
+
+* docs: document BaseDiffuser ([`edfa807`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/edfa807b47fa84e67337ae202605cd60bf97b55a))
+
+### Fix
+
+* fix: remove workflow_run as it doesn&#39;t work as expected
+
+on push to main or dev ([`b55b29c`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/b55b29ce846342876dcfc7257d01370ef098f80d))
+
+* fix: Wait for release tag to build docs ([`033400f`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/033400fb735d19b27e140b185055a087d9449daa))
+
+### Unknown
+
+* Merge pull request #9 from sachahu1/docs/documentation
+
+Document entire library to date ([`20f072e`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/20f072ee1287194125e9e261c2e499652befd46c))
+
+* lock poetry ([`a842476`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/a842476b270cb67af38df1dd4a0c75da9b9d3226))
+
 ## v0.1.0 (2024-08-06)
 
 ### Feature

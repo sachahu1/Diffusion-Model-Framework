@@ -7,15 +7,42 @@ import torch
 
 class BaseBetaScheduler:
   def __init__(self, steps: int, enforce_zero_terminal_snr: bool = False):
+    """Initializes a beta scheduler.
+
+    BaseBetaScheduler is an abstract base class for different beta scheduler
+    implementations. It defines the interface that all beta schedulers should
+    adhere to.
+
+    Args:
+      steps: The number of steps for the beta.
+      enforce_zero_terminal_snr: Whether to enforce zero terminal SNR inline
+        with `"Common Diffusion Noise Schedules and Sample Steps are Flawed"
+        <https://arxiv.org/abs/2305.08891>`_.\n
+        Defaults to ``False``.
+
+    Warnings:
+      Do not instantiate this class directly. Instead, build your own Beta
+      scheduler by inheriting from BaseBetaScheduler.
+      (see :class:`~.LinearBetaScheduler`)
+    """
     super().__init__()
-    self.steps = steps
+    self.steps: int = steps
+    """The number of steps for the beta scheduler."""
     self.betas = self.sample_betas()
+    """The :math:`\\beta` computed according to :meth:`~.BaseBetaScheduler.sample_betas`."""
     self.alpha_bars = self.compute_alpha_bar()
+    """The :math:`\\bar{\\alpha}` computed according to :meth:`~.BaseBetaScheduler.compute_alpha_bar`."""
 
     if enforce_zero_terminal_snr:
       self.enforce_zero_terminal_snr()
 
   def enforce_zero_terminal_snr(self):
+    """Enforce terminal SNR by adjusting :math:`\\beta` and :math:`\\bar{\\alpha}`.
+
+    This method enforces zero terminal SNR according to
+    `"Common Diffusion Noise Schedules and Sample Steps are Flawed"
+    <https://arxiv.org/abs/2305.08891>`_.
+    """
     alpha_bar_length = len(self.alpha_bars)
 
     # Convert betas to alphas_bar_sqrt
@@ -25,12 +52,12 @@ class BaseBetaScheduler:
 
     # Store old values.
     alphas_bar_sqrt_0 = alphas_bar_sqrt[0].clone()
-    alphas_bar_sqrt_T = alphas_bar_sqrt[-1].clone()
+    alphas_bar_sqrt_t = alphas_bar_sqrt[-1].clone()
     # Shift so last timestep is zero.
-    alphas_bar_sqrt -= alphas_bar_sqrt_T
+    alphas_bar_sqrt -= alphas_bar_sqrt_t
     # Scale so first timestep is back to old value.
     alphas_bar_sqrt *= alphas_bar_sqrt_0 / (
-      alphas_bar_sqrt_0 - alphas_bar_sqrt_T
+      alphas_bar_sqrt_0 - alphas_bar_sqrt_t
     )
 
     # Convert alphas_bar_sqrt to betas
@@ -47,14 +74,31 @@ class BaseBetaScheduler:
       )
 
   @abc.abstractmethod
-  def sample_betas(self):
-    pass
+  def sample_betas(self) -> torch.Tensor:
+    """Compute :math:`\\beta` for noise scheduling.
+
+    Returns:
+      A torch tensor of the :math:`\\beta` values.
+    """
+    raise NotImplementedError()
 
   @abc.abstractmethod
-  def compute_alpha_bar(self):
-    pass
+  def compute_alpha_bar(self) -> torch.Tensor:
+    """Compute :math:`\\bar{\\alpha}` for noise scheduling.
+
+    Returns:
+      A torch tensor of the :math:`\\bar{\\alpha}` values.
+    """
+    raise NotImplementedError()
 
   def to(self, device: str):
+    """Moves the beta scheduler to the given device.
+
+    Args:
+      device: The device to which the method should move the object.
+        Default is "cpu".
+
+    """
     self.betas = self.betas.to(device)
     self.alpha_bars = self.alpha_bars.to(device)
     return self
@@ -63,6 +107,19 @@ class BaseBetaScheduler:
   def from_tensors(
     cls, steps: int, betas: torch.Tensor, alpha_bars: torch.Tensor
   ):
+    """Instantiate a beta scheduler from tensors.
+
+    Instantiate a beta scheduler from tensors. This is particularly useful for
+    loading checkpoints.
+
+    Args:
+      steps: The number of steps for the beta scheduler.
+      betas: The pre-computed beta values for the noise scheduler.
+      alpha_bars: The pre-computed alpha bar values for the noise scheduler.
+
+    Returns:
+
+    """
     generic_beta_scheduler = cls(0)
     generic_beta_scheduler.steps = steps
     generic_beta_scheduler.betas = betas
@@ -78,17 +135,33 @@ class LinearBetaScheduler(BaseBetaScheduler):
     steps: int = 1000,
     enforce_zero_terminal_snr: bool = True,
   ):
-    self.beta_start = beta_start
-    self.beta_end = beta_end
+    """A Linear Beta scheduler.
+
+    A simple linear beta scheduler with betas linearly spaced between
+    ``beta_start`` and ``beta_end``.
+
+    Args:
+      beta_start: The starting value of the betas.
+      beta_end: The end value of the betas.
+      steps: The number of steps for the beta scheduler. This is also the number
+        of betas.
+      enforce_zero_terminal_snr: Whether to enforce zero terminal SNR.
+    """
+    self.beta_start: int = beta_start
+    """The starting value of the betas."""
+    self.beta_end: int = beta_end
+    """The end value of the betas."""
     super().__init__(
       steps=steps,
       enforce_zero_terminal_snr=enforce_zero_terminal_snr,
     )
 
-  def sample_betas(self):
+  def sample_betas(self) -> torch.Tensor:
+    """Return linearly spaced betas between ``self.beta_start`` and ``self.beta_end``."""
     return torch.linspace(self.beta_start, self.beta_end, self.steps)
 
   def compute_alpha_bar(self):
+    """Return :math:`\\bar{\\alpha}` computed from the beta values."""
     alphas = 1 - self.betas
     alpha_bar = torch.cumprod(alphas, dim=0)
     return alpha_bar
@@ -101,9 +174,51 @@ class CosineBetaScheduler(BaseBetaScheduler):
     steps: int = 1000,
     max_beta: Optional[float] = 0.999,
   ):
-    self.offset = offset
-    self.max_beta = max_beta
-    self.steps = steps
+    """A Cosine Beta scheduler.
+
+    A Cosine Beta Scheduler based on the following formulas:
+
+    .. math::
+      :nowrap:
+
+      \\begin{equation}
+      \\left\\{ \\begin{aligned}
+        \\bar{\\alpha}_t &= \\frac{f(t)}{f(0)} \\\\
+        \\beta_t &= 1 - \\frac{\\bar{\\alpha}_t}{\\bar{\\alpha}_t -1}
+      \\end{aligned} \\right.
+      \\end{equation}
+
+    where
+
+      .. math::
+
+        f(t) = \\cos(\\frac{t/T + s}{1 + s} * \\frac{\\pi}{2})^2
+
+    where
+
+      .. math::
+        :nowrap:
+
+        \\begin{equation}
+        \\left\\{ \\begin{aligned}
+
+          s & \\text{ is the offset} \\\\
+          T & \\text{ is the number of steps}
+
+        \\end{aligned} \\right.
+        \\end{equation}
+
+    Args:
+      offset: The offset :math:`s` defined above.
+      steps: The number of steps for the beta scheduler.
+      max_beta: The maximum beta values. Higher values will be clipped.
+    """
+    self.offset: float = offset
+    """The offset :math:`s` defined above."""
+    self.max_beta: Optional[float] = max_beta
+    """The maximum beta values. Higher values will be clipped."""
+    self.steps: int = steps
+    """The number of steps for the beta scheduler."""
     self._alpha_bars = self._compute_alpha_bar()
     self._betas = self._compute_betas()
 
@@ -111,7 +226,19 @@ class CosineBetaScheduler(BaseBetaScheduler):
       steps=steps,
     )
 
-  def f(self, t: torch.Tensor):
+  def f(self, t: torch.Tensor) -> torch.Tensor:
+    """A helper function to compute the :math:`\\bar{\\alpha}_t`.
+
+    Args:
+      t: The timestep to compute.
+
+    Returns:
+
+      .. math::
+
+        f(t) = \\cos(\\frac{t/T + s}{1 + s} * \\frac{\\pi}{2})^2
+
+    """
     return (
       torch.cos(
         (((t / self.steps) + self.offset) / (1 + self.offset)) * (torch.pi / 2)
