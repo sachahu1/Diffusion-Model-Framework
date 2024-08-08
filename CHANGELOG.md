@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v0.1.1-rc.3 (2024-08-08)
+
+### Ci
+
+* ci: Use workflow_dispatch to trigger docs ([`83c77e6`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/83c77e6f81b85f6964c7b2fdb0a0547f51ff4f73))
+
+### Fix
+
+* fix: commit forgotten __init__,py ([`c670b4a`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/c670b4a9cf922585776d3eb35ef8c21fd419c4a5))
+
+### Unknown
+
+* Merge pull request #11 from sachahu1/fix/build-docs-not-triggered
+
+Trigger doc release via workflow_dispatch ([`c737587`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/c737587cea206bdde74632db99a85232dacaef13))
+
 ## v0.1.1-rc.2 (2024-08-07)
 
 ### Fix
