@@ -83,16 +83,17 @@ class Checkpoint:
   """
 
   @classmethod
-  def from_file(cls, file_path: str) -> "Checkpoint":
+  def from_file(cls, file_path: str, map_location: Optional[str] = None) -> "Checkpoint":
     """Load and instantiate a checkpoint from a file.
 
     Args:
       file_path: The path to the checkpoint file.
+      map_location: A function, torch. device, string or a dict specifying how to remap storage location.
 
     Returns:
       A checkpoint instance.
     """
-    checkpoint = torch.load(f=file_path, weights_only=True)
+    checkpoint = torch.load(f=file_path, weights_only=True, map_location=map_location)
     checkpoint = cls(**checkpoint)
     beta_scheduler_config = BetaSchedulerConfiguration(
       **checkpoint.beta_scheduler_config
