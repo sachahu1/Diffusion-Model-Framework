@@ -1,23 +1,21 @@
-from typing import TYPE_CHECKING
-from typing import List
-from typing import Tuple
+from enum import Enum
+from typing import List, Tuple
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
 from diffusion_models.gaussian_diffusion.base_diffuser import BaseDiffuser
-from diffusion_models.gaussian_diffusion.beta_schedulers import (
-  BaseBetaScheduler,
-)
+from diffusion_models.gaussian_diffusion.beta_schedulers import \
+  BaseBetaScheduler
+from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
 from diffusion_models.utils.schemas import Checkpoint
 
+class DenoisingMode(str, Enum):
+  Linear = "linear"
+  Quadratic = "quadratic"
 
-if TYPE_CHECKING:
-  from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
-
-
-class GaussianDiffuser(BaseDiffuser):
+class DdimDiffuser(BaseDiffuser):
   def __init__(self, beta_scheduler: BaseBetaScheduler):
     """Initializes the class instance.
 
@@ -30,15 +28,15 @@ class GaussianDiffuser(BaseDiffuser):
     """The device to use. Defaults to cpu."""
 
   @classmethod
-  def from_checkpoint(cls, checkpoint: Checkpoint) -> "GaussianDiffuser":
-    """Instantiate a Gaussian Diffuser from a training checkpoint.
+  def from_checkpoint(cls, checkpoint: Checkpoint) -> "DdimDiffuser":
+    """Instantiate a DDIM Diffuser from a training checkpoint.
 
     Args:
       checkpoint: The training checkpoint object containing
         the trained model's parameters and configuration.
 
     Returns:
-      An instance of the GaussianDiffuser class initialized with the parameters
+      An instance of the DdimDiffuser class initialized with the parameters
       loaded from the given checkpoint.
     """
     return cls(
@@ -60,8 +58,8 @@ class GaussianDiffuser(BaseDiffuser):
         Default is "cpu".
 
     Example:
-      >>> gaussian_diffuser = GaussianDiffuser()
-      >>> gaussian_diffuser = gaussian_diffuser.to(device="cuda")
+      >>> ddim_diffuser = DdimDiffuser()
+      >>> ddim_diffuser = ddim_diffuser.to(device="cuda")
     """
     self.device = device
     self.beta_scheduler = self.beta_scheduler.to(self.device)
@@ -106,27 +104,46 @@ class GaussianDiffuser(BaseDiffuser):
 
   @torch.no_grad()
   def _denoise_step(
-    self, images: torch.Tensor, model: torch.nn.Module, timestep: torch.Tensor
+    self,
+    images: torch.Tensor,
+    model: torch.nn.Module,
+    timestep: torch.Tensor,
+    timestep_prev: torch.Tensor,
+    eta: float = 0.0,
   ) -> torch.Tensor:
-    beta_t = self.beta_scheduler.betas[timestep].reshape(-1, 1, 1, 1)
-    alpha_t = 1 - beta_t
+    epsilon_theta = model(images, timestep)
+
     alpha_bar_t = self.beta_scheduler.alpha_bars.gather(
       dim=0, index=timestep
     ).reshape(-1, 1, 1, 1)
-    mu = (1 / torch.sqrt(alpha_t)) * (
-      images - model(images, timestep) * (beta_t / torch.sqrt(1 - alpha_bar_t))
+
+    alpha_bar_t_prev = self.beta_scheduler.alpha_bars.gather(
+      dim=0, index=timestep_prev
+    ).reshape(-1, 1, 1, 1)
+
+    sigma = eta * torch.sqrt(
+      (1 - alpha_bar_t_prev)
+      / (1 - alpha_bar_t)
+      * (1 - alpha_bar_t / alpha_bar_t_prev)
     )
 
-    if timestep[0] == 0:
-      return mu
-    else:
-      sigma = torch.sqrt(beta_t) * torch.randn_like(images)
-      return mu + sigma
+    epsilon_t = torch.randn_like(images)
+
+    mu = (
+      torch.sqrt(alpha_bar_t_prev / alpha_bar_t) * images
+      + (
+        torch.sqrt(1 - alpha_bar_t_prev - sigma**2)
+        - torch.sqrt((alpha_bar_t_prev * (1 - alpha_bar_t)) / alpha_bar_t)
+      ) * epsilon_theta
+    )
+    return mu + sigma * epsilon_t
 
   def denoise_batch(
     self,
     images: torch.Tensor,
     model: "BaseDiffusionModel",
+    number_of_steps: int = 50,
+    mode: DenoisingMode = DenoisingMode.Linear
   ) -> List[torch.Tensor]:
     """Denoise a batch of images.
 
@@ -135,14 +152,36 @@ class GaussianDiffuser(BaseDiffuser):
     Args:
       images: A batch of noisy images.
       model: The model to be used for denoising.
+      number_of_steps: Number of steps used in the denoising process.
+      mode: Linear or Quadratic sampling.
 
     Returns:
       A list of tensors containing a batch of denoised images.
     """
+    if mode == DenoisingMode.Linear:
+      a = self.beta_scheduler.steps // number_of_steps
+      time_steps = np.asarray(list(range(0, self.beta_scheduler.steps, a)))
+    else:
+      time_steps = (
+        np.linspace(0, np.sqrt(self.beta_scheduler.steps * 0.8), number_of_steps)
+        ** 2
+      ).astype(int)
+
+    time_steps = time_steps + 1
+    time_steps_prev = np.concatenate([[0], time_steps[:-1]])
+
     denoised_images = []
-    for i in tqdm(range(self.beta_scheduler.steps)[::-1], desc="Denoising"):
-      timestep = torch.full((images.shape[0],), i, device=self.device)
-      images = self._denoise_step(images, model=model, timestep=timestep)
+    for i in tqdm(range(number_of_steps)[::-1], desc="Denoising"):
+      timestep = torch.full(
+        (images.shape[0],), time_steps[i], device=self.device
+      )
+      timestep_prev = torch.full(
+        (images.shape[0],), time_steps_prev[i], device=self.device
+      )
+
+      images = self._denoise_step(
+        images, model=model, timestep=timestep, timestep_prev=timestep_prev,
+      )
       images = torch.clamp(images, -1.0, 1.0)
       denoised_images.append(images)
     return denoised_images
