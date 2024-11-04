@@ -11,7 +11,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<=3.12"
+python = ">=3.10,<3.13"
 #pillow-simd = "^9.0.0"
 tqdm = "^4.66.2"
 numpy = "^2.1.3"
