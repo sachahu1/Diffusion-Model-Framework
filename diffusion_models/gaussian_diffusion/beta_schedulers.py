@@ -6,7 +6,8 @@ import torch
 
 
 class BaseBetaScheduler:
-  def __init__(self,
+  def __init__(
+    self,
     steps: int,
     enforce_zero_terminal_snr: bool = False,
     initialize: bool = True,
@@ -46,8 +47,8 @@ class BaseBetaScheduler:
         self.enforce_zero_terminal_snr()
 
   def _initialize(self):
-      self.betas = self.sample_betas()
-      self.alpha_bars = self.compute_alpha_bar()
+    self.betas = self.sample_betas()
+    self.alpha_bars = self.compute_alpha_bar()
 
   def enforce_zero_terminal_snr(self):
     """Enforce terminal SNR by adjusting :math:`\\beta` and :math:`\\bar{\\alpha}`.

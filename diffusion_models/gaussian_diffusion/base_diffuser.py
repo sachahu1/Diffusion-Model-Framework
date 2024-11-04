@@ -7,12 +7,12 @@ import torch
 from diffusion_models.gaussian_diffusion.beta_schedulers import (
   BaseBetaScheduler,
 )
+
 if TYPE_CHECKING:
   from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
 
 
 class BaseDiffuser(abc.ABC):
-
   def __init__(self, beta_scheduler: BaseBetaScheduler):
     """Initializes the object with the specified beta scheduler.
 
@@ -51,7 +51,9 @@ class BaseDiffuser(abc.ABC):
     raise NotImplementedError()
 
   @abc.abstractmethod
-  def denoise_batch(self, images: torch.Tensor, model: "BaseDiffusionModel") -> List[torch.Tensor]:
+  def denoise_batch(
+    self, images: torch.Tensor, model: "BaseDiffusionModel"
+  ) -> List[torch.Tensor]:
     """Denoise a batch of images.
 
     Args:
@@ -75,4 +77,3 @@ class BaseDiffuser(abc.ABC):
         Default is "cpu".
     """
     raise NotImplementedError()
-
