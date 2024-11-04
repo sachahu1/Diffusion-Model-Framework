@@ -48,16 +48,20 @@ class BaseDiffusionModel(nn.Module, abc.ABC):
   def denoise(self, images: torch.Tensor) -> List[torch.Tensor]:
     """Denoise a batch of images.
 
-        Args:
-          images: A tensor containing a batch of images to denoise.
+    Args:
+      images: A tensor containing a batch of images to denoise.
 
-        Returns:
-          A list of tensors containing a batch of denoised images.
-        """
+    Returns:
+      A list of tensors containing a batch of denoised images.
+    """
     return self.diffuser.denoise_batch(images=images, model=self)
 
   @abc.abstractmethod
-  def forward(self, x: torch.Tensor, timestep: torch.Tensor) -> torch.Tensor:
+  def forward(
+    self,
+    x: torch.Tensor,
+    timestep: torch.Tensor,
+  ) -> torch.Tensor:
     """Forward pass of the diffusion model.
 
     The forward pass of the diffusion model, predicting the noise at a single
