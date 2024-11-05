@@ -144,3 +144,8 @@ class OldCheckpoint:
     return Checkpoint(
       **dataclasses.asdict(self), beta_scheduler_config=beta_scheduler_config
     )
+
+@dataclass
+class Timestep:
+  current: torch.Tensor
+  previous: Optional[torch.Tensor] = None

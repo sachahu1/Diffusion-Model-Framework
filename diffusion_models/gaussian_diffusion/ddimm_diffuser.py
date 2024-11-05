@@ -1,22 +1,31 @@
 from enum import Enum
-from typing import List, Tuple
+from typing import List
+from typing import Tuple
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
 from diffusion_models.gaussian_diffusion.base_diffuser import BaseDiffuser
-from diffusion_models.gaussian_diffusion.beta_schedulers import \
-  BaseBetaScheduler
+from diffusion_models.gaussian_diffusion.beta_schedulers import (
+  BaseBetaScheduler,
+)
 from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
-from diffusion_models.utils.schemas import Checkpoint
+from diffusion_models.utils.schemas import Checkpoint, Timestep
+
 
 class DenoisingMode(str, Enum):
   Linear = "linear"
   Quadratic = "quadratic"
 
+
 class DdimDiffuser(BaseDiffuser):
-  def __init__(self, beta_scheduler: BaseBetaScheduler):
+  def __init__(
+    self,
+    beta_scheduler: BaseBetaScheduler,
+    mode: DenoisingMode = DenoisingMode.Quadratic,
+    number_of_steps: int = 20,
+  ):
     """Initializes the class instance.
 
     Args:
@@ -24,8 +33,43 @@ class DdimDiffuser(BaseDiffuser):
 
     """
     super().__init__(beta_scheduler)
+
+    self.number_of_steps = number_of_steps
+    """Number of steps to use in the denoising process."""
+
+    self.mode = mode
+    """Linear or Quadratic sampling."""
+
     self.device: str = "cpu"
     """The device to use. Defaults to cpu."""
+
+  @property
+  def steps(self) -> List[int]:
+    if self.mode == DenoisingMode.Linear:
+      a = self.beta_scheduler.steps // self.number_of_steps
+      time_steps = np.asarray(list(range(0, self.beta_scheduler.steps, a)))
+    else:
+      time_steps = (
+        np.linspace(
+          0, np.sqrt(self.beta_scheduler.steps * 0.8), self.number_of_steps
+        )
+        ** 2
+      ).astype(int)
+    self._time_steps = time_steps + 1
+    self._time_steps_prev = np.concatenate([[0], time_steps[:-1]])
+    return list(range(self.number_of_steps))[::-1]
+
+  def get_timestep(self, number_of_images: int, idx: int) -> Timestep:
+    timestep = torch.full(
+      (number_of_images,), self._time_steps[idx], device=self.device
+    )
+    timestep_prev = torch.full(
+      (number_of_images,), self._time_steps_prev[idx], device=self.device
+    )
+    return Timestep(
+      current=timestep,
+      previous=timestep_prev,
+    )
 
   @classmethod
   def from_checkpoint(cls, checkpoint: Checkpoint) -> "DdimDiffuser":
@@ -107,18 +151,20 @@ class DdimDiffuser(BaseDiffuser):
     self,
     images: torch.Tensor,
     model: torch.nn.Module,
-    timestep: torch.Tensor,
-    timestep_prev: torch.Tensor,
+    timestep: Timestep,
     eta: float = 0.0,
   ) -> torch.Tensor:
-    epsilon_theta = model(images, timestep)
+    current_timestep = timestep.current
+    previous_timestep = timestep.previous
+
+    epsilon_theta = model(images, current_timestep)
 
     alpha_bar_t = self.beta_scheduler.alpha_bars.gather(
-      dim=0, index=timestep
+      dim=0, index=current_timestep
     ).reshape(-1, 1, 1, 1)
 
     alpha_bar_t_prev = self.beta_scheduler.alpha_bars.gather(
-      dim=0, index=timestep_prev
+      dim=0, index=previous_timestep
     ).reshape(-1, 1, 1, 1)
 
     sigma = eta * torch.sqrt(
@@ -134,7 +180,8 @@ class DdimDiffuser(BaseDiffuser):
       + (
         torch.sqrt(1 - alpha_bar_t_prev - sigma**2)
         - torch.sqrt((alpha_bar_t_prev * (1 - alpha_bar_t)) / alpha_bar_t)
-      ) * epsilon_theta
+      )
+      * epsilon_theta
     )
     return mu + sigma * epsilon_t
 
@@ -142,8 +189,6 @@ class DdimDiffuser(BaseDiffuser):
     self,
     images: torch.Tensor,
     model: "BaseDiffusionModel",
-    number_of_steps: int = 50,
-    mode: DenoisingMode = DenoisingMode.Linear
   ) -> List[torch.Tensor]:
     """Denoise a batch of images.
 
@@ -152,35 +197,18 @@ class DdimDiffuser(BaseDiffuser):
     Args:
       images: A batch of noisy images.
       model: The model to be used for denoising.
-      number_of_steps: Number of steps used in the denoising process.
-      mode: Linear or Quadratic sampling.
 
     Returns:
       A list of tensors containing a batch of denoised images.
     """
-    if mode == DenoisingMode.Linear:
-      a = self.beta_scheduler.steps // number_of_steps
-      time_steps = np.asarray(list(range(0, self.beta_scheduler.steps, a)))
-    else:
-      time_steps = (
-        np.linspace(0, np.sqrt(self.beta_scheduler.steps * 0.8), number_of_steps)
-        ** 2
-      ).astype(int)
-
-    time_steps = time_steps + 1
-    time_steps_prev = np.concatenate([[0], time_steps[:-1]])
-
     denoised_images = []
-    for i in tqdm(range(number_of_steps)[::-1], desc="Denoising"):
-      timestep = torch.full(
-        (images.shape[0],), time_steps[i], device=self.device
-      )
-      timestep_prev = torch.full(
-        (images.shape[0],), time_steps_prev[i], device=self.device
-      )
+    for i in tqdm(self.steps, desc="Denoising"):
+      timestep = self.get_timestep(images.shape[0], idx=i)
 
       images = self._denoise_step(
-        images, model=model, timestep=timestep, timestep_prev=timestep_prev,
+        images,
+        model=model,
+        timestep=timestep,
       )
       images = torch.clamp(images, -1.0, 1.0)
       denoised_images.append(images)

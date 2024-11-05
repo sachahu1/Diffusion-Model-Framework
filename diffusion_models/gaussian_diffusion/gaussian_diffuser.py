@@ -1,8 +1,5 @@
-from typing import TYPE_CHECKING
-from typing import List
-from typing import Tuple
+from typing import TYPE_CHECKING, List, Tuple
 
-import numpy as np
 import torch
 from tqdm import tqdm
 
@@ -10,8 +7,7 @@ from diffusion_models.gaussian_diffusion.base_diffuser import BaseDiffuser
 from diffusion_models.gaussian_diffusion.beta_schedulers import (
   BaseBetaScheduler,
 )
-from diffusion_models.utils.schemas import Checkpoint
-
+from diffusion_models.utils.schemas import Checkpoint, Timestep
 
 if TYPE_CHECKING:
   from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
@@ -28,6 +24,16 @@ class GaussianDiffuser(BaseDiffuser):
     super().__init__(beta_scheduler)
     self.device: str = "cpu"
     """The device to use. Defaults to cpu."""
+
+  @property
+  def steps(self) -> List[int]:
+    return list(range(self.beta_scheduler.steps))[::-1]
+
+  def get_timestep(self, number_of_images: int, idx: int):
+    timestep = torch.full((number_of_images,), idx, device=self.device)
+    return Timestep(
+      current=timestep,
+    )
 
   @classmethod
   def from_checkpoint(cls, checkpoint: Checkpoint) -> "GaussianDiffuser":
@@ -106,18 +112,21 @@ class GaussianDiffuser(BaseDiffuser):
 
   @torch.no_grad()
   def _denoise_step(
-    self, images: torch.Tensor, model: torch.nn.Module, timestep: torch.Tensor
+    self, images: torch.Tensor, model: torch.nn.Module, timestep: Timestep
   ) -> torch.Tensor:
-    beta_t = self.beta_scheduler.betas[timestep].reshape(-1, 1, 1, 1)
+    current_timestep = timestep.current
+    beta_t = self.beta_scheduler.betas[current_timestep].reshape(-1, 1, 1, 1)
     alpha_t = 1 - beta_t
     alpha_bar_t = self.beta_scheduler.alpha_bars.gather(
-      dim=0, index=timestep
+      dim=0, index=current_timestep
     ).reshape(-1, 1, 1, 1)
     mu = (1 / torch.sqrt(alpha_t)) * (
-      images - model(images, timestep) * (beta_t / torch.sqrt(1 - alpha_bar_t))
+      images
+      - model(images, current_timestep)
+      * (beta_t / torch.sqrt(1 - alpha_bar_t))
     )
 
-    if timestep[0] == 0:
+    if current_timestep[0] == 0:
       return mu
     else:
       sigma = torch.sqrt(beta_t) * torch.randn_like(images)
@@ -140,8 +149,8 @@ class GaussianDiffuser(BaseDiffuser):
       A list of tensors containing a batch of denoised images.
     """
     denoised_images = []
-    for i in tqdm(range(self.beta_scheduler.steps)[::-1], desc="Denoising"):
-      timestep = torch.full((images.shape[0],), i, device=self.device)
+    for i in tqdm(self.steps, desc="Denoising"):
+      timestep = self.get_timestep(images.shape[0], idx=i)
       images = self._denoise_step(images, model=model, timestep=timestep)
       images = torch.clamp(images, -1.0, 1.0)
       denoised_images.append(images)
