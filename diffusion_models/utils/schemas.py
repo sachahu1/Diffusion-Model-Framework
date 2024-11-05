@@ -69,10 +69,10 @@ class Checkpoint:
   """The model state dict."""
   optimizer_state_dict: Dict[str, Any]
   """The optimizer state dict."""
-  scaler: Optional[GradScaler]
-  """The GradScaler instance."""
   beta_scheduler_config: BetaSchedulerConfiguration
   """The beta scheduler configuration."""
+  scaler: Optional[GradScaler] = None
+  """The GradScaler instance."""
   tensorboard_run_name: Optional[str] = None
   """The name of the tensorboard run."""
   image_channels: int = 3
@@ -144,6 +144,7 @@ class OldCheckpoint:
     return Checkpoint(
       **dataclasses.asdict(self), beta_scheduler_config=beta_scheduler_config
     )
+
 
 @dataclass
 class Timestep:
