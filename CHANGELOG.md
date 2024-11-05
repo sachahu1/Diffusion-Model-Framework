@@ -1,6 +1,27 @@
 # CHANGELOG
 
 
+## v1.0.0-rc.2 (2024-11-05)
+
+### Documentation
+
+* docs: fix inference example ([`a0f59e9`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/a0f59e949d4f97369b90d46d2d3b44b4ac410e3d))
+
+### Features
+
+* feat: improve inference framework to support DDIM ([`06c4ac1`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/06c4ac1513528c36c639d6f936ba61c060034a19))
+
+### Unknown
+
+* Merge pull request #20 from sachahu1/feature/improve-inference-framework
+
+feat: improve inference framework to support DDIM ([`50e260b`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/50e260bf4e06aee22ab07ddefb874a83e5d70d1a))
+
+* Merge pull request #19 from sachahu1/docs/fix-examples
+
+docs: fix inference example ([`645337d`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/645337d8ce50b11f63f062be13df7d166fc867bc))
+
+
 ## v1.0.0-rc.1 (2024-11-04)
 
 ### Breaking
