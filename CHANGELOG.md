@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v1.0.0 (2024-11-05)
+
+### Testing
+
+* test: add testing for checkpoints ([`d9b29dd`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/d9b29dd13f8476cc1b85979270839bf452f3d5ef))
+
+* test: add some initial tests ([`5bd3d09`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/5bd3d09219098341fd242af2277450bbfd02f0a7))
+
+### Unknown
+
+* Merge pull request #21 from sachahu1/dev
+
+Release 1.0.0 ([`0a27aa7`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/0a27aa7f05875ed0ce7722a17dd0b68d68ac551c))
+
+* Merge pull request #22 from sachahu1/feature/initial-unit-testing
+
+Test basic functionalities ([`2aad1c6`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/2aad1c63981135fdca1d6e063459cde9831bf2c5))
+
+
 ## v1.0.0-rc.2 (2024-11-05)
 
 ### Documentation
