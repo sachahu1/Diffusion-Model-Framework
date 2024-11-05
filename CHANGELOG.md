@@ -1,5 +1,105 @@
 # CHANGELOG
 
+
+## v1.0.0-rc.2 (2024-11-05)
+
+### Documentation
+
+* docs: fix inference example ([`a0f59e9`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/a0f59e949d4f97369b90d46d2d3b44b4ac410e3d))
+
+### Features
+
+* feat: improve inference framework to support DDIM ([`06c4ac1`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/06c4ac1513528c36c639d6f936ba61c060034a19))
+
+### Unknown
+
+* Merge pull request #20 from sachahu1/feature/improve-inference-framework
+
+feat: improve inference framework to support DDIM ([`50e260b`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/50e260bf4e06aee22ab07ddefb874a83e5d70d1a))
+
+* Merge pull request #19 from sachahu1/docs/fix-examples
+
+docs: fix inference example ([`645337d`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/645337d8ce50b11f63f062be13df7d166fc867bc))
+
+
+## v1.0.0-rc.1 (2024-11-04)
+
+### Breaking
+
+* ci: remove python3.9 and add 3.12
+
+BREAKING CHANGE: no longer supports python 3.9 ([`24422be`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/24422be40ff2f885f9dbcc8b67afa339c33d5fba))
+
+* chore: bumping numpy
+
+BREAKING CHANGE: Numpy bumped > 2.0 ([`4e21dde`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/4e21ddee348a2bbcc1d58e9c8fce680dff504a10))
+
+### Bug Fixes
+
+* fix: minor type fixes ([`4e211cb`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/4e211cb77eec4f113f16747665f078f9e760448c))
+
+### Chores
+
+* chore: support python 3.12.* ([`3099ab5`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/3099ab5e865437da4d4936f2b19ed6b72e8b936f))
+
+* chore: support python3.12 ([`d9ddb02`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/d9ddb024bcedb7df326fea7765b68ed57db69545))
+
+### Features
+
+* feat: adding DDIM denoising ([`2b5595b`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/2b5595b9716de1d4cd412e1229ea49bfaf8b32b0))
+
+### Unknown
+
+* Merge pull request #18 from sachahu1/feature/ddim-sampler
+
+DDIM denoising ([`d7a9927`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/d7a99272d6ec1662fc9df3127b7094b2213ed7d4))
+
+
+## v0.1.2-rc.3 (2024-08-08)
+
+### Bug Fixes
+
+* fix: map_location is needed for cpu ([`c918d3b`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/c918d3b37de7d09f1627ff8f4c395edf055d4e7e))
+
+### Unknown
+
+* Merge pull request #16 from sachahu1/fix/map-location-needed
+
+fix: map_location is needed for cpu ([`41206eb`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/41206ebfbab3971647052452b71803661f59b411))
+
+
+## v0.1.2-rc.2 (2024-08-08)
+
+### Bug Fixes
+
+* fix: torch load weights only as security issue ([`6fb7d39`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/6fb7d394440f51e1acb1c90893b75cf2c74d3e1f))
+
+* fix: allow loading BetaScheduler without initialization ([`193bd96`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/193bd969d56129a708ef1d312fbd5430c5df2a30))
+
+* fix: remove unnecessary dependency ([`76b8ab1`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/76b8ab11b9498eee69556326a860a3cfd130d037))
+
+* fix: Release latest on main only ([`13568f2`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/13568f2dbdd33e4aa145f137d3143c79a904e51a))
+
+### Unknown
+
+* Merge pull request #15 from sachahu1/fix/only-release-latest-on-main
+
+fix: run inference from checkpoint ([`e80b03e`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/e80b03e89aa2be7398eda82acc843287ca384953))
+
+
+## v0.1.2-rc.1 (2024-08-08)
+
+### Bug Fixes
+
+* fix: give dispatch permissions to trigger CI ([`5f3333a`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/5f3333a598603ad9ff8abdeea31d77d1d3bf5154))
+
+### Unknown
+
+* Merge pull request #14 from sachahu1/ci/fix-dispatch-permissions
+
+fix: give dispatch permissions to trigger CI ([`1cc96f7`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/1cc96f72700d7b1e6b69744b7fa4a9d10f4908aa))
+
+
 ## v0.1.1 (2024-08-08)
 
 ### Unknown
@@ -8,9 +108,10 @@
 
 Release documentation and fixed CI/CD pipeline ([`4f7fae9`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/4f7fae94864190ee9c6fce9808255bd22ec0369b))
 
+
 ## v0.1.1-rc.4 (2024-08-08)
 
-### Fix
+### Bug Fixes
 
 * fix: Mistake in workflow name ([`f80c59b`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/f80c59b11aaa461349650f5bf54972134911c673))
 
@@ -20,15 +121,16 @@ Release documentation and fixed CI/CD pipeline ([`4f7fae9`](https://github.com/s
 
 fix: Mistake in workflow name ([`09afacd`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/09afacda6b961489fab7608c71882fc3ce576ce6))
 
+
 ## v0.1.1-rc.3 (2024-08-08)
 
-### Ci
-
-* ci: Use workflow_dispatch to trigger docs ([`83c77e6`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/83c77e6f81b85f6964c7b2fdb0a0547f51ff4f73))
-
-### Fix
+### Bug Fixes
 
 * fix: commit forgotten __init__,py ([`c670b4a`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/c670b4a9cf922585776d3eb35ef8c21fd419c4a5))
+
+### Continuous Integration
+
+* ci: Use workflow_dispatch to trigger docs ([`83c77e6`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/83c77e6f81b85f6964c7b2fdb0a0547f51ff4f73))
 
 ### Unknown
 
@@ -36,9 +138,10 @@ fix: Mistake in workflow name ([`09afacd`](https://github.com/sachahu1/Diffusion
 
 Trigger doc release via workflow_dispatch ([`c737587`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/c737587cea206bdde74632db99a85232dacaef13))
 
+
 ## v0.1.1-rc.2 (2024-08-07)
 
-### Fix
+### Bug Fixes
 
 * fix: pipeline build and release docs at the tag node ([`e56d111`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/e56d111d65f9fe1a47f70488a779125d42589030))
 
@@ -48,7 +151,16 @@ Trigger doc release via workflow_dispatch ([`c737587`](https://github.com/sachah
 
 fix: pipeline build and release docs at the tag node ([`bf6c44a`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/bf6c44a3e688dd2dd69f98f5918481ccfcbe5523))
 
+
 ## v0.1.1-rc.1 (2024-08-07)
+
+### Bug Fixes
+
+* fix: remove workflow_run as it doesn't work as expected
+
+on push to main or dev ([`b55b29c`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/b55b29ce846342876dcfc7257d01370ef098f80d))
+
+* fix: Wait for release tag to build docs ([`033400f`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/033400fb735d19b27e140b185055a087d9449daa))
 
 ### Documentation
 
@@ -68,14 +180,6 @@ fix: pipeline build and release docs at the tag node ([`bf6c44a`](https://github
 
 * docs: document BaseDiffuser ([`edfa807`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/edfa807b47fa84e67337ae202605cd60bf97b55a))
 
-### Fix
-
-* fix: remove workflow_run as it doesn&#39;t work as expected
-
-on push to main or dev ([`b55b29c`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/b55b29ce846342876dcfc7257d01370ef098f80d))
-
-* fix: Wait for release tag to build docs ([`033400f`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/033400fb735d19b27e140b185055a087d9449daa))
-
 ### Unknown
 
 * Merge pull request #9 from sachahu1/docs/documentation
@@ -84,9 +188,10 @@ Document entire library to date ([`20f072e`](https://github.com/sachahu1/Diffusi
 
 * lock poetry ([`a842476`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/a842476b270cb67af38df1dd4a0c75da9b9d3226))
 
+
 ## v0.1.0 (2024-08-06)
 
-### Feature
+### Features
 
 * feat: add some status badges
 

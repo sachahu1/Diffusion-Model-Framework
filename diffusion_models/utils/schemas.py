@@ -17,6 +17,7 @@ from diffusion_models.gaussian_diffusion.beta_schedulers import (
 @dataclass
 class TrainingConfiguration:
   """A training configuration for simple experiment management."""
+
   training_name: str
   """The name of the training."""
   batch_size: int
@@ -36,6 +37,7 @@ class TrainingConfiguration:
 @dataclass
 class LogConfiguration:
   """An object to manage logging configuration."""
+
   log_rate: int = 10
   """The rate at which training metrics are logged."""
   image_rate: int = 50
@@ -48,6 +50,7 @@ class LogConfiguration:
 @dataclass
 class BetaSchedulerConfiguration:
   """A simplified beta scheduler configuration."""
+
   steps: int
   """The number of steps in the beta scheduler."""
   betas: torch.Tensor
@@ -55,19 +58,21 @@ class BetaSchedulerConfiguration:
   alpha_bars: torch.Tensor
   """The alpha bar values."""
 
+
 @dataclass
 class Checkpoint:
   """A simplified checkpoint framework for easy saving and loading."""
+
   epoch: int
   """The current epoch."""
   model_state_dict: Dict[str, Any]
   """The model state dict."""
   optimizer_state_dict: Dict[str, Any]
   """The optimizer state dict."""
-  scaler: Optional[GradScaler]
-  """The GradScaler instance."""
   beta_scheduler_config: BetaSchedulerConfiguration
   """The beta scheduler configuration."""
+  scaler: Optional[GradScaler] = None
+  """The GradScaler instance."""
   tensorboard_run_name: Optional[str] = None
   """The name of the tensorboard run."""
   image_channels: int = 3
@@ -83,16 +88,21 @@ class Checkpoint:
   """
 
   @classmethod
-  def from_file(cls, file_path: str) -> "Checkpoint":
+  def from_file(
+    cls, file_path: str, map_location: Optional[str] = None
+  ) -> "Checkpoint":
     """Load and instantiate a checkpoint from a file.
 
     Args:
       file_path: The path to the checkpoint file.
+      map_location: A function, torch. device, string or a dict specifying how to remap storage location.
 
     Returns:
       A checkpoint instance.
     """
-    checkpoint = torch.load(f=file_path)
+    checkpoint = torch.load(
+      f=file_path, weights_only=True, map_location=map_location
+    )
     checkpoint = cls(**checkpoint)
     beta_scheduler_config = BetaSchedulerConfiguration(
       **checkpoint.beta_scheduler_config
@@ -134,3 +144,9 @@ class OldCheckpoint:
     return Checkpoint(
       **dataclasses.asdict(self), beta_scheduler_config=beta_scheduler_config
     )
+
+
+@dataclass
+class Timestep:
+  current: torch.Tensor
+  previous: Optional[torch.Tensor] = None

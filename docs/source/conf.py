@@ -26,7 +26,7 @@ copyright = "2024, MindsparkAI LTD."
 author = "Sacha Hu"
 
 # The full version, including alpha/beta/rc tags
-release = "0.1.1"
+release = "1.0.0-rc.2"
 
 source_suffix = {
   ".rst": "restructuredtext",
@@ -59,7 +59,7 @@ extensions = [
 autodoc_typehints = "description"
 autodoc_typehints_description_target = "documented"
 simplify_optional_unions = False
-autodoc_typehints_format = 'short'
+autodoc_typehints_format = "short"
 python_use_unqualified_type_names = True
 
 
@@ -161,11 +161,16 @@ html_theme_options = {
 
 repo = git.Repo(search_parent_directories=True)
 versions = [
-  (tag_ref.name, f"https://www.sachahu.com/docs/diffusion-model-framework/pages/{tag_ref.name}")
+  (
+    tag_ref.name,
+    f"https://www.sachahu.com/docs/diffusion-model-framework/pages/{tag_ref.name}",
+  )
   for tag_ref in git.Repo("../../").tags
 ]
 
-versions.append(("latest", "https://www.sachahu.com/docs/diffusion-model-framework/latest"))
+versions.append(
+  ("latest", "https://www.sachahu.com/docs/diffusion-model-framework/latest")
+)
 
 html_context = {
   "current_version": release,

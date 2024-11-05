@@ -6,7 +6,12 @@ import torch
 
 
 class BaseBetaScheduler:
-  def __init__(self, steps: int, enforce_zero_terminal_snr: bool = False):
+  def __init__(
+    self,
+    steps: int,
+    enforce_zero_terminal_snr: bool = False,
+    initialize: bool = True,
+  ):
     """Initializes a beta scheduler.
 
     BaseBetaScheduler is an abstract base class for different beta scheduler
@@ -19,22 +24,31 @@ class BaseBetaScheduler:
         with `"Common Diffusion Noise Schedules and Sample Steps are Flawed"
         <https://arxiv.org/abs/2305.08891>`_.\n
         Defaults to ``False``.
+      initialize: Whether to initialize the beta scheduler. If this is
+        set to ``False``, you will need to manually set ``self.betas`` and
+        ``self.alpha_bars``. Otherwise, they are initialized using your
+        ``sample_betas`` and ``compute_alpha_bar`` methods.
 
     Warnings:
       Do not instantiate this class directly. Instead, build your own Beta
       scheduler by inheriting from BaseBetaScheduler.
       (see :class:`~.LinearBetaScheduler`)
     """
-    super().__init__()
     self.steps: int = steps
     """The number of steps for the beta scheduler."""
-    self.betas = self.sample_betas()
+    self.betas = None
     """The :math:`\\beta` computed according to :meth:`~.BaseBetaScheduler.sample_betas`."""
-    self.alpha_bars = self.compute_alpha_bar()
+    self.alpha_bars = None
     """The :math:`\\bar{\\alpha}` computed according to :meth:`~.BaseBetaScheduler.compute_alpha_bar`."""
 
-    if enforce_zero_terminal_snr:
-      self.enforce_zero_terminal_snr()
+    if initialize:
+      self._initialize()
+      if enforce_zero_terminal_snr:
+        self.enforce_zero_terminal_snr()
+
+  def _initialize(self):
+    self.betas = self.sample_betas()
+    self.alpha_bars = self.compute_alpha_bar()
 
   def enforce_zero_terminal_snr(self):
     """Enforce terminal SNR by adjusting :math:`\\beta` and :math:`\\bar{\\alpha}`.
@@ -120,7 +134,7 @@ class BaseBetaScheduler:
     Returns:
 
     """
-    generic_beta_scheduler = cls(0)
+    generic_beta_scheduler = cls(steps, initialize=False)
     generic_beta_scheduler.steps = steps
     generic_beta_scheduler.betas = betas
     generic_beta_scheduler.alpha_bars = alpha_bars

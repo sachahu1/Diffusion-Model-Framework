@@ -11,8 +11,6 @@ jobs:
 
   build-release-docs:
     runs-on: ubuntu-latest
-    needs:
-      - release
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout
@@ -25,7 +23,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v5
         with:
-          python-version: "^3.9.0"
+          python-version: "^3.10.0"
       #----------------------------------------------
       #  -----  install & configure poetry  -----
       #----------------------------------------------
@@ -51,7 +49,10 @@ jobs:
           poetry run sphinx-build -M html docs/source/ docs/build
 
           aws s3 sync docs/build/html ${{ env.DOCS_UPLOAD_URI }}/pages/v$(poetry version --short) --delete
-          aws s3 sync docs/build/html ${{ env.DOCS_UPLOAD_URI }}/latest --delete
-
+          
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            aws s3 sync docs/build/html ${{ env.DOCS_UPLOAD_URI }}/latest --delete
+          fi
+          
           rm -rf docs/build
   

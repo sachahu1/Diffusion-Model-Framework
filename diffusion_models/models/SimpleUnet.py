@@ -4,6 +4,7 @@ import math
 import torch
 from torch import nn
 
+from diffusion_models.gaussian_diffusion.base_diffuser import BaseDiffuser
 from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
   GaussianDiffuser,
 )
@@ -63,7 +64,7 @@ class SinusoidalPositionEmbeddings(nn.Module):
 class SimpleUnet(BaseDiffusionModel):
   def __init__(
     self,
-    diffuser: GaussianDiffuser,
+    diffuser: BaseDiffuser,
     image_channels: int,
   ):
     """A Simplified variant of the Unet architecture used in DDPM.

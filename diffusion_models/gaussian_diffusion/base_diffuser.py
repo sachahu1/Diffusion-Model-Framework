@@ -7,12 +7,13 @@ import torch
 from diffusion_models.gaussian_diffusion.beta_schedulers import (
   BaseBetaScheduler,
 )
+from diffusion_models.utils.schemas import Timestep
+
 if TYPE_CHECKING:
   from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
 
 
 class BaseDiffuser(abc.ABC):
-
   def __init__(self, beta_scheduler: BaseBetaScheduler):
     """Initializes the object with the specified beta scheduler.
 
@@ -31,6 +32,17 @@ class BaseDiffuser(abc.ABC):
     """
     self.beta_scheduler: BaseBetaScheduler = beta_scheduler
     """The beta scheduler used by the diffuser."""
+
+  @property
+  @abc.abstractmethod
+  def steps(self) -> List[int]:
+    """Returns the list of steps used in the denoising process."""
+    raise NotImplementedError
+
+  @abc.abstractmethod
+  def get_timestep(self, number_of_images: int, idx: int) -> Timestep:
+    """Get timestep information used for denoising."""
+    raise NotImplementedError
 
   @abc.abstractmethod
   def diffuse_batch(
@@ -51,7 +63,9 @@ class BaseDiffuser(abc.ABC):
     raise NotImplementedError()
 
   @abc.abstractmethod
-  def denoise_batch(self, images: torch.Tensor, model: "BaseDiffusionModel") -> List[torch.Tensor]:
+  def denoise_batch(
+    self, images: torch.Tensor, model: "BaseDiffusionModel"
+  ) -> List[torch.Tensor]:
     """Denoise a batch of images.
 
     Args:
@@ -75,4 +89,3 @@ class BaseDiffuser(abc.ABC):
         Default is "cpu".
     """
     raise NotImplementedError()
-
