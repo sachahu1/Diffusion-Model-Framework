@@ -1,14 +1,14 @@
 """Running inference.
 
-Below is a code example of an indference script. Simply plug in your own
+Below is a code example of an inference script. Simply plug in your own
 checkpoint and start running inference. To extend this further, you might
 want to look into compiling your model to ONNX, TensorRT, OpenVino or other
 formats.
 
-.. literalinclude:: /../../examples/train_model.py
+.. literalinclude:: /../../examples/infer.py
    :language: python
    :linenos:
-   :lines: 16-50
+   :lines: 27-50
 """
 
 __all__ = []
@@ -27,7 +27,7 @@ if __name__ == "__main__":
   checkpoint_file_path = "your_checkpoint.pt"
 
   checkpoint = Checkpoint.from_file(checkpoint_file_path)
-  gaussian_diffuser = GaussianDiffuser.from_checkpoint(checkpoint)
+  gaussian_diffuser = GaussianDiffuser.from_checkpoint(checkpoint) # Switch to DdimDiffuser for faster inference
 
   model = SimpleUnet(
     image_channels=checkpoint.image_channels, diffuser=gaussian_diffuser
