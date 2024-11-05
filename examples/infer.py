@@ -27,7 +27,7 @@ if __name__ == "__main__":
   checkpoint_file_path = "your_checkpoint.pt"
 
   checkpoint = Checkpoint.from_file(checkpoint_file_path)
-  gaussian_diffuser = GaussianDiffuser.from_checkpoint(checkpoint) # Switch to DdimDiffuser for faster inference
+  gaussian_diffuser = GaussianDiffuser.from_checkpoint(checkpoint)  # Switch to DdimDiffuser for faster inference
 
   model = SimpleUnet(
     image_channels=checkpoint.image_channels, diffuser=gaussian_diffuser

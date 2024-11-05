@@ -7,8 +7,12 @@ from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
-from diffusion_models.utils.schemas import BetaSchedulerConfiguration, \
-  Checkpoint, LogConfiguration, TrainingConfiguration
+from diffusion_models.utils.schemas import (
+  BetaSchedulerConfiguration,
+  Checkpoint,
+  LogConfiguration,
+  TrainingConfiguration,
+)
 from diffusion_models.utils.tensorboard import TensorboardManager
 
 

@@ -49,9 +49,7 @@ class DiffusionInference:
     pil_images = transforms.ToPILImage()(image_grid)
     return pil_images
 
-  def generate(
-    self, number_of_images: int, save_gif: bool = False
-  ) -> Image:
+  def generate(self, number_of_images: int, save_gif: bool = False) -> Image:
     """Generate a batch of images.
 
     Args:
@@ -117,8 +115,8 @@ class DiffusionInference:
       device=self.device,
     )
 
-    for i in range(self.model.diffuser.beta_scheduler.steps)[::-1]:
-      timestep = torch.full((images.shape[0],), i, device=self.device)
+    for i in self.model.diffuser.steps:
+      timestep = self.model.diffuser.get_timestep(images.shape[0], i)
       images = self.model.diffuser._denoise_step(
         images, model=self.model, timestep=timestep
       )
