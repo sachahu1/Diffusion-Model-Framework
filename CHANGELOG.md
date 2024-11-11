@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.0.2-rc.1 (2024-11-11)
+
+### Performance Improvements
+
+- Remove unused matplotlib dependency
+  ([`119df2a`](https://github.com/sachahu1/Diffusion-Model-Framework/commit/119df2a30e8c1f8af001eb556a046c14dd812916))
+
+
 ## v1.0.1 (2024-11-11)
 
 
