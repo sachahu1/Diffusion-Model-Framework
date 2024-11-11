@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "diffusion-model-framework"
-version = "1.0.0"
+version = "1.0.1-rc.1"
 description = ""
 authors = ["Sacha Hu <sachahu@mindsparkai.com>"]
 readme = "README.md"
