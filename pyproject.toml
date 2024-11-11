@@ -19,9 +19,14 @@ torchvision = "^0.20.1"
 torch = "^2.5.1"
 tensorboard = "^2.18.0"
 matplotlib = "^3.9.2"
-jupyter = "^1.0.0"
 pillow = "^11.0.0"
 transformers = "^4.46.1"
+
+[tool.poetry.group.jupyter]
+optional = true
+
+[tool.poetry.group.jupyter.dependencies]
+jupyter = "^1.0.0"
 
 [tool.poetry.group.gdown]
 optional = true

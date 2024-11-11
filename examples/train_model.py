@@ -6,7 +6,7 @@ for a simple diffusion model and constitutes a good starting point.
 .. literalinclude:: /../../examples/train_model.py
    :language: python
    :linenos:
-   :lines: 14-97
+   :lines: 14-102
 """
 
 __all__ = []

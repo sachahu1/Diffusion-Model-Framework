@@ -8,7 +8,7 @@ formats.
 .. literalinclude:: /../../examples/infer.py
    :language: python
    :linenos:
-   :lines: 27-50
+   :lines: 16-50
 """
 
 __all__ = []
