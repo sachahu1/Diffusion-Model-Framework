@@ -17,45 +17,43 @@ Then, you're ready to start setting up your own training process. For help
 getting started with that, have a look at some of the [examples](https://github.com/sachahu1/Diffusion-Model-Framework/blob/main/examples).
 
 ### Installing the package
-Thanks to poetry, installing this package is very simple and can be done in a single command. Simply run:
+Thanks to uv, installing this package is very simple and can be done in a single command. Simply run:
 ```shell
-poetry install
+uv sync
 ```
 That's it, the package is installed. Move to the next section to learn how to use this package.
 
 ## Building from source
-### Installing Poetry
-This tool uses poetry. If you already have poetry installed,
-please skip to the next section. Otherwise, let's first setup poetry.
-
-To install poetry, simply run this command:
+### Installing uv
+This tool uses [uv](https://docs.astral.sh/uv/). If you already have uv installed,
+please skip to the next section. Otherwise, run:
 ```shell
-curl -sSL https://install.python-poetry.org | python3 -
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-You can find out more about poetry installation [here](https://python-poetry.org/docs/master/#installation).
+You can find out more about uv installation [here](https://docs.astral.sh/uv/getting-started/installation/).
 
-That's it, poetry is set up.
+That's it, uv is set up.
 ### Installing and building locally
-Installing the package via poetry is very simple. Simply run:
+Installing the package via uv is very simple. Simply run:
 ```shell
-poetry install
+uv sync
 ```
 You can now start using the package to train your diffusion model. For example, try running:
 ```shell
-poetry run python3 examples/train_model.py
+uv run python3 examples/train_model.py
 ```
 
 Building a wheel is also possible via:
 ```shell
-poetry build
+uv build
 ```
 
 ## Building the documentation
 First you will need to install the dependency group used for documentation.
 ```shell
-poetry install --with documentation
+uv sync --group documentation
 ```
 Now you can build the documentation using Sphinx by running:
 ```shell
-poetry run sphinx-build -M html docs/source/ docs/build
+uv run sphinx-build -M html docs/source/ docs/build
 ```

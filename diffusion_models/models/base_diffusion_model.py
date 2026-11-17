@@ -1,5 +1,5 @@
 import abc
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import torch
 from torch import nn
@@ -61,6 +61,7 @@ class BaseDiffusionModel(nn.Module, abc.ABC):
     self,
     x: torch.Tensor,
     timestep: torch.Tensor,
+    labels: Optional[torch.Tensor],
   ) -> torch.Tensor:
     """Forward pass of the diffusion model.
 
@@ -70,6 +71,7 @@ class BaseDiffusionModel(nn.Module, abc.ABC):
     Args:
       x: A batch of noisy images.
       timestep: The timesteps of each image in the batch.
+      labels: Optional labels to be passed when conditioning the diffusion model.
 
     Returns:
       A tensor representing the noise predicted for each image.
