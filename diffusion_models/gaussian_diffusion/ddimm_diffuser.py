@@ -56,7 +56,7 @@ class DdimDiffuser(BaseDiffuser):
         ** 2
       ).astype(int)
     self._time_steps = time_steps + 1
-    self._time_steps_prev = np.concatenate([[0], time_steps[:-1]])
+    self._time_steps_prev = np.concatenate([[0], self._time_steps[:-1]])
     return list(range(self.number_of_steps))[::-1]
 
   def get_timestep(self, number_of_images: int, idx: int) -> Timestep:
