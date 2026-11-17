@@ -20,13 +20,23 @@ from diffusion_models.diffusion_trainer import DiffusionTrainer
 from diffusion_models.gaussian_diffusion.beta_schedulers import (
   LinearBetaScheduler,
 )
+from diffusion_models.gaussian_diffusion.ddimm_diffuser import DdimDiffuser
 from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
   GaussianDiffuser,
 )
 from diffusion_models.models.SimpleUnet import SimpleUnet
-from diffusion_models.utils.schemas import LogConfiguration
-from diffusion_models.utils.schemas import TrainingConfiguration
-
+from diffusion_models.models.conditioned_simple_unet import (
+  ConditionedSimpleUnet,
+)
+from diffusion_models.utils.adopt import ADOPT
+from diffusion_models.utils.batch_processor import (
+  ClipBatchProcessor,
+  SimpleBatchProcessor,
+)
+from diffusion_models.utils.schemas import (
+  LogConfiguration,
+  TrainingConfiguration,
+)
 
 if __name__ == "__main__":
   image_size = 64
@@ -36,7 +46,7 @@ if __name__ == "__main__":
     batch_size=256,
     learning_rate=2 * 10e-4,
     number_of_epochs=500,
-    training_name="ReworkedFrameworkBase",
+    training_name="ConditionalDiffusion",
     checkpoint_rate=100,
     mixed_precision_training=False,
     # gradient_clip=0.1,
@@ -48,13 +58,14 @@ if __name__ == "__main__":
   )
   model = SimpleUnet(
     image_channels=image_channels,
-    diffuser=GaussianDiffuser(
+    diffuser=DdimDiffuser(
       beta_scheduler=LinearBetaScheduler(
         beta_start=0.0001,
         beta_end=0.02,
         steps=1000,
       ),
     ),
+    # text_embedding_size=512,
   )
 
   print("Num params: ", sum(p.numel() for p in model.parameters()))
@@ -74,6 +85,11 @@ if __name__ == "__main__":
   )
 
   # Define Dataset
+  # dataset = datasets.CocoCaptions(
+  #   root="../data/coco/train2017",
+  #   annFile="../data/coco/annotations/captions_train2017.json",
+  #   transform=image_transforms,
+  # )
   dataset = datasets.CelebA(
     root="../data", download=False, transform=image_transforms, split="train"
   )
@@ -92,8 +108,8 @@ if __name__ == "__main__":
     ),
     reverse_transforms=reverse_transforms,
     training_configuration=training_configuration,
-    loss_function=F.l1_loss,
-    scheduler=None,
+    loss_function=F.mse_loss,
+    # scheduler=None,
     log_configuration=log_configuration,
     device="cuda",
   )

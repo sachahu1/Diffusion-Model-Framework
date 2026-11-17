@@ -16,6 +16,7 @@ __all__ = []
 from torchvision.transforms import v2
 
 from diffusion_models.diffusion_inference import DiffusionInference
+from diffusion_models.gaussian_diffusion.ddimm_diffuser import DdimDiffuser
 from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
   GaussianDiffuser,
 )
@@ -24,7 +25,7 @@ from diffusion_models.utils.schemas import Checkpoint
 
 
 if __name__ == "__main__":
-  checkpoint_file_path = "your_checkpoint.pt"
+  checkpoint_file_path = "../data/new_checkpoint.pt"
 
   checkpoint = Checkpoint.from_file(checkpoint_file_path)
   gaussian_diffuser = GaussianDiffuser.from_checkpoint(
