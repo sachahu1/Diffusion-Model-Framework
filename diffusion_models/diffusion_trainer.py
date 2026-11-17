@@ -1,5 +1,5 @@
 import pathlib
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional, Union
 
 import torch
 from torch.nn import functional as F
@@ -28,6 +28,8 @@ class DiffusionTrainer:
     log_configuration: LogConfiguration = LogConfiguration(),
     reverse_transforms: Callable = lambda x: x,
     device: str = "cuda",
+    output_directory: Optional[Union[str, pathlib.Path]] = None,
+    run_config: Optional[str] = None,
   ):
     """A diffusion trainer framework.
 
@@ -42,6 +44,12 @@ class DiffusionTrainer:
       log_configuration: The logging configuration to use.
       reverse_transforms: The reverse transforms to use.
       device: The device to use.
+      output_directory: Where to write this run's artifacts. When provided,
+        checkpoints go to ``<output_directory>/checkpoints`` and tensorboard
+        logs to ``<output_directory>/tensorboard``. Otherwise the legacy
+        ``../checkpoints/<name>`` and ``../runs/<name>`` locations are used.
+      run_config: The resolved configuration (YAML) of the run. It is logged
+        to tensorboard and stored in every checkpoint for reproducibility.
     """
     self.model = model.to(device)
     """The diffusion model to use."""
@@ -69,25 +77,39 @@ class DiffusionTrainer:
     self._image_shape = dataset[0][0].shape
 
     self.scaler = torch.amp.GradScaler(
-      device=device
-      # init_scale=8192,
+      device=device,
+      enabled=training_configuration.mixed_precision_training,
     )
     """A torch GradScaler object."""
 
     self.log_configuration = log_configuration
     """A LogConfiguration object."""
 
-    self.checkpoint_path = (
-      pathlib.Path("../checkpoints")
-      / self.training_configuration.training_name
-    )
+    if output_directory is not None:
+      output_directory = pathlib.Path(output_directory)
+      self.checkpoint_path = output_directory / "checkpoints"
+      log_directory = output_directory / "tensorboard"
+    else:
+      self.checkpoint_path = (
+        pathlib.Path("../checkpoints")
+        / self.training_configuration.training_name
+      )
+      log_directory = None
     """The path to save checkpoints."""
 
-    self.checkpoint_path.mkdir(exist_ok=True)
+    self.checkpoint_path.mkdir(parents=True, exist_ok=True)
     self.tensorboard_manager = TensorboardManager(
       log_name=self.training_configuration.training_name,
+      log_directory=log_directory,
     )
     """A tensorboard manager instance."""
+
+    self.run_config = run_config
+    """The resolved run configuration (YAML), if any."""
+    if run_config is not None:
+      self.tensorboard_manager.log_text(
+        "config", f"```yaml\n{run_config}\n```"
+      )
 
     self.reverse_transforms = reverse_transforms
     """A set of reverse transforms."""
@@ -115,6 +137,7 @@ class DiffusionTrainer:
         alpha_bars=self.model.diffuser.beta_scheduler.alpha_bars,
       ),
       tensorboard_run_name=self.tensorboard_manager.summary_writer.log_dir,
+      config_yaml=self.run_config,
     )
     checkpoint.to_file(self.checkpoint_path / checkpoint_name)
 
@@ -179,10 +202,27 @@ class DiffusionTrainer:
       metrics: A dictionary mapping metric names to values.
       global_step: The current global step.
     """
+    was_training = self.model.training
     self.model.eval()
+    try:
+      self._log_to_tensorboard(metrics=metrics, global_step=global_step)
+    finally:
+      # Logging switches to eval mode (BatchNorm, etc.); always restore.
+      self.model.train(was_training)
+
+  @torch.no_grad()
+  def _log_to_tensorboard(self, metrics: Dict[str, float], global_step: int):
     if global_step % self.log_configuration.log_rate == 0:
       self.tensorboard_manager.log_metrics(
         metrics=metrics, global_step=global_step
+      )
+
+    if (
+      self.log_configuration.weight_rate is not None
+      and global_step % self.log_configuration.weight_rate == 0
+    ):
+      self.tensorboard_manager.log_weights(
+        model=self.model, global_step=global_step
       )
 
     if (global_step % self.log_configuration.image_rate == 0) and (
