@@ -1,0 +1,40 @@
+# The standard training configuration. Config groups (model, diffuser, ...)
+# are registered by diffusion_models/_store; override them from the command line,
+# e.g. `optimizer=adopt` or `training.batch_size=64`.
+defaults:
+  - _self_
+  - model: simple_unet
+  - diffuser: ddim
+  - beta_scheduler: linear
+  - optimizer: adamw
+  - dataset: celeba
+
+seed: 0
+device: cuda
+image_size: 64
+image_channels: 3
+reverse_image_size: 128
+
+training:
+  _target_: diffusion_models.utils.schemas.TrainingConfiguration
+  training_name: diffusion
+  batch_size: 256
+  learning_rate: ${optimizer.lr}
+  number_of_epochs: 500
+  checkpoint_rate: 100
+  mixed_precision_training: false
+  gradient_clip: null
+
+logging:
+  _target_: diffusion_models.utils.schemas.LogConfiguration
+  log_rate: 10
+  image_rate: 635
+  number_of_images: 5
+  weight_rate: 635
+
+hydra:
+  run:
+    dir: runs/${training.training_name}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: runs/${training.training_name}/multirun/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.num}
