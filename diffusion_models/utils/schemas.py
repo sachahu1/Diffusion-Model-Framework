@@ -44,6 +44,8 @@ class LogConfiguration:
   """The rate at which images are generated for visualization. This can be used to validate model performance."""
   number_of_images: int = 5
   """The number of images to generate."""
+  weight_rate: Optional[int] = None
+  """The rate (in steps) at which weight histograms are logged. Disabled when None."""
   # metrics: Dict[str, float] # TODO: consider Dict[str, Callable]
 
 
@@ -77,6 +79,8 @@ class Checkpoint:
   """The name of the tensorboard run."""
   image_channels: int = 3
   """The number of image channels used in the training."""
+  config_yaml: Optional[str] = None
+  """The resolved configuration (YAML) of the run that produced this checkpoint."""
   loss: Optional[float] = (
     None  # TODO: remove legacy parameter and resave models
   )
