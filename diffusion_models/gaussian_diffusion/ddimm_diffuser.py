@@ -122,7 +122,7 @@ class DdimDiffuser(BaseDiffuser):
         betas=checkpoint.beta_scheduler_config.betas,
         alpha_bars=checkpoint.beta_scheduler_config.alpha_bars,
       ),
-      prediction_type=checkpoint.prediction_type,
+      prediction_type=PredictionType(checkpoint.prediction_type),
     )
 
   def to(self, device: str = "cpu"):
@@ -200,7 +200,7 @@ class DdimDiffuser(BaseDiffuser):
       dim=0, index=current_timestep
     ).reshape(-1, 1, 1, 1)
 
-    alpha_bar_t_prev = self.beta_scheduler.alpha_bars.gather(
+    alpha_bar_t_prev = self.beta_scheduler.alpha_bars.gather(  # ty: ignore[no-matching-overload]
       dim=0, index=previous_timestep
     ).reshape(-1, 1, 1, 1)
 

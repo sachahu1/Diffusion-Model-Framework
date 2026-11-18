@@ -67,7 +67,7 @@ class DiffusionTrainer:
       evaluation_configuration: When ``fid_rate`` is set, FID (and KID) of
         samples from the EMA model (or the raw model without EMA) is computed
         every that many epochs, and after the last epoch, then logged to
-        tensorboard. Needs the ``evaluation`` dependency group.
+        tensorboard. Needs the ``evaluation`` extra.
       evaluation_dataset: The real reference images for the evaluation,
         ideally a held-out split.
     """
@@ -126,7 +126,8 @@ class DiffusionTrainer:
           "channels_last is very slow without mixed precision training."
         )
       # ``BaseDiffusionModel.to`` does not accept ``memory_format``.
-      torch.nn.Module.to(self.model, memory_format=torch.channels_last)
+      torch.nn.Module.to(  # ty: ignore[no-matching-overload]
+        self.model, memory_format=torch.channels_last)
 
     self.log_configuration = log_configuration
     """A LogConfiguration object."""
@@ -216,7 +217,7 @@ class DiffusionTrainer:
       file_path: The checkpoint to restore (e.g. ``latest.pt`` or
         ``interrupted.pt``).
     """
-    checkpoint = Checkpoint.from_file(file_path, map_location=self.device)
+    checkpoint = Checkpoint.from_file(str(file_path), map_location=self.device)
     expected = PredictionType(self.model.diffuser.prediction_type).value
     if checkpoint.prediction_type != expected:
       raise ValueError(
@@ -388,17 +389,17 @@ class DiffusionTrainer:
 
   def _maybe_evaluate(self) -> None:
     """Compute and log FID/KID when due (after checkpoints are saved)."""
-    if self.evaluator is None:
+    if self.evaluator is None or self.evaluation_configuration is None:
       return
     rate = self.evaluation_configuration.fid_rate
     is_last = (
       self._completed_epochs == self.training_configuration.number_of_epochs
     )
-    if self._completed_epochs % rate != 0 and not is_last:
+    if rate is None or self._completed_epochs % rate != 0 and not is_last:
       return
     # Evaluate the EMA weights when available: they are what you would ship.
     model = self.ema.model if self.ema is not None else self.model
-    metrics = self.evaluator.evaluate(model)
+    metrics = self.evaluator.evaluate(model)  # ty: ignore[invalid-argument-type]
     # ``evaluate`` restores the model's training mode.
     global_step = self._completed_epochs * len(self.dataloader)
     self.tensorboard_manager.log_metrics(

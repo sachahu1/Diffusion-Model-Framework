@@ -48,7 +48,7 @@ def evaluate_checkpoint(
   Returns:
     The ``FID`` (and ``KID``) scores.
   """
-  checkpoint = Checkpoint.from_file(checkpoint_path, map_location=device)
+  checkpoint = Checkpoint.from_file(str(checkpoint_path), map_location=device)
   if checkpoint.config_yaml is None:
     raise ValueError(
       "The checkpoint has no embedded config, so the model cannot be rebuilt."
@@ -63,7 +63,7 @@ def evaluate_checkpoint(
       raise ValueError("This diffuser has no configurable number of steps.")
     model.diffuser.number_of_steps = steps
 
-  if configuration.get("eval_dataset") is not None:
+  if configuration.get("eval_dataset") is not None:  # ty: ignore[invalid-argument-type]
     real_configuration = configuration.eval_dataset
   else:
     real_configuration = OmegaConf.create(

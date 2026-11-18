@@ -57,7 +57,7 @@ class DiffusionInference:
     number_of_images: int,
     save_gif: bool = False,
     gif_path: str = "generated.gif",
-  ) -> Image:
+  ) -> Image | None:
     """Generate a batch of images.
 
     Args:
@@ -66,7 +66,8 @@ class DiffusionInference:
       gif_path: Where the GIF is saved when ``save_gif`` is set.
 
     Returns:
-      A PIL image of the generated images stacked together.
+      A PIL image of the generated images stacked together, or ``None`` when
+      ``save_gif`` is set (the GIF is written to ``gif_path`` instead).
     """
     images = torch.randn(
       (

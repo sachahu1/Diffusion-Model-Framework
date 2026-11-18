@@ -78,7 +78,9 @@ class BaseDiffusionModel(nn.Module, abc.ABC):
     """
     raise NotImplementedError
 
-  def to(self, device: str = "cpu") -> "BaseDiffusionModel":
+  def to(  # ty: ignore[incompatible-method-override]
+    self, device: str = "cpu"
+  ) -> "BaseDiffusionModel":
     """Moves the model to the specified device.
 
     This performs a similar behaviour to the `to` method of PyTorch. moving the
@@ -101,5 +103,5 @@ class BaseDiffusionModel(nn.Module, abc.ABC):
       A compiled diffusion model.
     """
     model = torch.compile(self, *args, **kwargs)
-    model.to = self.to
+    model.to = self.to  # ty: ignore[missing-attribute]
     return model

@@ -61,7 +61,7 @@ class GaussianDiffuser(BaseDiffuser):
         betas=checkpoint.beta_scheduler_config.betas,
         alpha_bars=checkpoint.beta_scheduler_config.alpha_bars,
       ),
-      prediction_type=checkpoint.prediction_type,
+      prediction_type=PredictionType(checkpoint.prediction_type),
     )
 
   def to(self, device: str = "cpu"):

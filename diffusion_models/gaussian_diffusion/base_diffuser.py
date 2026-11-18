@@ -104,6 +104,25 @@ class BaseDiffuser(abc.ABC):
     """Get timestep information used for denoising."""
     raise NotImplementedError
 
+  def _denoise_step(
+    self, images: torch.Tensor, model: torch.nn.Module, timestep: Timestep
+  ) -> torch.Tensor:
+    """Denoise a batch of images by a single step.
+
+    Used to step through generation one timestep at a time (see
+    :meth:`~.DiffusionInference.get_generator`). Diffusers that support it
+    override this method.
+
+    Args:
+      images: A tensor containing a batch of images to denoise.
+      model: The model to be used for denoising.
+      timestep: The current and previous timesteps.
+
+    Returns:
+      The images, denoised by one step.
+    """
+    raise NotImplementedError()
+
   @abc.abstractmethod
   def diffuse_batch(
     self, images: torch.Tensor

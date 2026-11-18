@@ -4,7 +4,7 @@ Rebuilds a model from a hydra config, loads the weights of a training
 checkpoint and generates images. The config is composed like for training
 (``diffusion_models/conf/baseline.yaml``, extended by ``conf/infer.yaml``), so
 use the same overrides as the run that produced the checkpoint. Install the
-extra dependencies with ``uv sync --group training``, then run::
+extra dependencies with ``pip install diffusion-model-framework[inference]``, then run::
 
   diffusion-models infer checkpoint=runs/<name>/<timestamp>/checkpoints/latest.pt \\
     +config=small_attention_ema
@@ -53,7 +53,7 @@ def infer(
   if steps is not None:
     if not hasattr(model.diffuser, "number_of_steps"):
       raise ValueError("This diffuser has no configurable number of steps.")
-    model.diffuser.number_of_steps = steps
+    model.diffuser.number_of_steps = steps  # ty: ignore[invalid-assignment]
 
   inference = DiffusionInference(
     model=model,
@@ -73,7 +73,9 @@ def infer(
       print(f"Saved {gif_path}")
     else:
       image_path = output_directory / "generated.png"
-      inference.generate(number_of_images).save(image_path)
+      image = inference.generate(number_of_images)
+      assert image is not None
+      image.save(image_path)
       print(f"Saved {image_path}")
 
 

@@ -10,7 +10,6 @@ from typing import Optional
 from typing import Union
 
 import torch
-from torch.cuda.amp import GradScaler
 
 from diffusion_models.gaussian_diffusion.beta_schedulers import (
   BaseBetaScheduler,
@@ -138,7 +137,7 @@ class Checkpoint:
   """The optimizer state dict."""
   beta_scheduler_config: BetaSchedulerConfiguration
   """The beta scheduler configuration."""
-  scaler: Optional[GradScaler] = None
+  scaler: Optional[Dict[str, Any]] = None
   """The GradScaler instance."""
   ema_model_state_dict: Optional[Dict[str, Any]] = None
   """The state dict of the EMA (exponential moving average) weights, if tracked."""
@@ -182,7 +181,7 @@ class Checkpoint:
     )
     checkpoint = cls(**checkpoint)
     beta_scheduler_config = BetaSchedulerConfiguration(
-      **checkpoint.beta_scheduler_config
+      **checkpoint.beta_scheduler_config  # ty: ignore[invalid-argument-type]
     )
     checkpoint.beta_scheduler_config = beta_scheduler_config
     return checkpoint
@@ -223,7 +222,7 @@ class OldCheckpoint:
   epoch: int
   model_state_dict: Dict[str, Any]
   optimizer_state_dict: Dict[str, Any]
-  scaler: Optional[GradScaler]
+  scaler: Optional[Dict[str, Any]]
   # beta_scheduler_config: BetaSchedulerConfiguration
   tensorboard_run_name: Optional[str] = None
   loss: Optional[float] = (
