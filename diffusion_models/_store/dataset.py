@@ -4,6 +4,7 @@ from torchvision import datasets
 from torchvision.transforms import v2
 
 dataset_store = store(group="dataset")
+eval_dataset_store = store(group="eval_dataset")
 
 # Normalize(0.5, 0.5) maps [0, 1] -> [-1, 1]; its inverse is mean=-1, std=2.
 ImageTransforms = builds(
@@ -19,7 +20,7 @@ ImageTransforms = builds(
 dataset_store(
   builds(
     datasets.CelebA,
-    root="../data",
+    root="data",
     download=False,
     split="train",
     transform=ImageTransforms,
@@ -34,6 +35,29 @@ dataset_store(
     size=64,
     image_size=["${image_channels}", "${image_size}", "${image_size}"],
     transform=ImageTransforms,
+    populate_full_signature=True,
+  ),
+  name="fake",
+)
+
+# Held-out reference images for FID/KID. Select one with `eval_dataset=<name>`.
+eval_dataset_store(
+  builds(
+    datasets.CelebA,
+    root="data",
+    download=False,
+    split="valid",
+    transform=ImageTransforms,
+  ),
+  name="celeba_valid",
+)
+eval_dataset_store(
+  builds(
+    datasets.FakeData,
+    size=64,
+    image_size=["${image_channels}", "${image_size}", "${image_size}"],
+    transform=ImageTransforms,
+    random_offset=1,
     populate_full_signature=True,
   ),
   name="fake",
