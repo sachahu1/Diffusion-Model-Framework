@@ -8,6 +8,17 @@ To get started, simply install the python package from PyPI:
 ```shell
 pip install diffusion-model-framework
 ```
+The base install only has what the models and samplers need. Extras add more:
+
+| Extra | Adds | For |
+| --- | --- | --- |
+| `inference` | click, hydra | the `diffusion-models infer` CLI |
+| `training` | `inference` + tensorboard, transformers | training |
+| `evaluation` | `inference` + torchmetrics | FID / KID |
+
+```shell
+pip install "diffusion-model-framework[inference]"
+```
 Then, you're ready to start setting up your own training process. For help 
 getting started with that, have a look at some of the [examples](Examples).
 
