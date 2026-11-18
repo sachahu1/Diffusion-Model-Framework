@@ -1,6 +1,7 @@
 # The standard training configuration. Config groups (model, diffuser, ...)
 # are registered by diffusion_models/_store; override them from the command line,
-# e.g. `optimizer=adopt` or `training.batch_size=64`.
+# e.g. `diffusion-models train optimizer=adopt training.batch_size=64`.
+# Presets from conf/config/ are applied with `+config=<name>`.
 defaults:
   - _self_
   - model: simple_unet
@@ -8,9 +9,12 @@ defaults:
   - beta_scheduler: linear
   - optimizer: adamw
   - dataset: celeba
+  - eval_dataset: null  # e.g. eval_dataset=celeba_valid, for FID
 
 seed: 0
 device: cuda
+# A checkpoint (e.g. runs/<name>/<timestamp>/checkpoints/latest.pt) to resume from.
+resume_from: null
 image_size: 64
 image_channels: 3
 reverse_image_size: 128
@@ -23,7 +27,13 @@ training:
   number_of_epochs: 500
   checkpoint_rate: 100
   mixed_precision_training: false
+  mixed_precision_dtype: bfloat16
+  channels_last: false
   gradient_clip: null
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  compile: false
 
 logging:
   _target_: diffusion_models.utils.schemas.LogConfiguration
@@ -31,6 +41,16 @@ logging:
   image_rate: 635
   number_of_images: 5
   weight_rate: 635
+
+evaluation:
+  _target_: diffusion_models.utils.schemas.EvaluationConfiguration
+  fid_rate: null  # epochs between FID/KID evaluations; null disables
+  number_of_samples: 5000
+  batch_size: 100
+  compute_kid: true
+  kid_subset_size: 1000
+  seed: 0  # sampling noise seed, so scores are comparable across runs
+  num_workers: 4  # dataloader workers reading the real images
 
 hydra:
   run:

@@ -40,7 +40,7 @@ uv sync
 ```
 You can now start using the package to train your diffusion model. For example, try running:
 ```shell
-uv run python3 examples/train_model.py
+uv run diffusion-models train
 ```
 
 Building a wheel is also possible via:

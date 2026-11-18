@@ -1,6 +1,6 @@
-"""Running a config-driven training script.
+"""Config-driven training, run through the ``diffusion-models train`` CLI.
 
-This example configures a training run with `hydra <https://hydra.cc>`_ and
+A run is configured with `hydra <https://hydra.cc>`_ and
 `hydra-zen <https://mit-ll-responsible-ai.github.io/hydra-zen>`_. Every run
 gets its own directory (``runs/<name>/<timestamp>``) holding:
 
@@ -9,25 +9,25 @@ gets its own directory (``runs/<name>/<timestamp>``) holding:
 - ``checkpoints/``: checkpoints which embed the resolved config as YAML,
 - ``run_info.json``: the git commit and seed.
 
-The standard config is ``examples/config/baseline.yaml`` and the overridable
-config groups are registered in ``diffusion_models/_store``. Install the extra dependencies with ``uv sync --group training``, then run::
+The standard config is ``diffusion_models/conf/baseline.yaml``, presets live in
+``diffusion_models/conf/config/`` and the overridable config groups are
+registered in ``diffusion_models/_store``. Install the extra dependencies with
+``uv sync --group training``, then run::
 
-  python -m examples.train_model
-  python -m examples.train_model training.batch_size=64 optimizer=adopt
-  python -m examples.train_model diffuser=ddpm beta_scheduler=cosine
-  python -m examples.train_model dataset=fake device=cpu  # smoke test
-  python -m examples.train_model --multirun optimizer.lr=1e-4,2e-4
-
-.. literalinclude:: /../../examples/train_model.py
-   :language: python
-   :linenos:
-   :lines: 26-
+  diffusion-models train
+  diffusion-models train training.batch_size=64 optimizer=adopt
+  diffusion-models train +config=small_attention_ema
+  diffusion-models train diffuser=ddpm beta_scheduler=cosine
+  diffusion-models train dataset=fake device=cpu  # smoke test
+  diffusion-models train resume_from=runs/<name>/<timestamp>/checkpoints/latest.pt
+  diffusion-models train --multirun optimizer.lr=1e-4,2e-4
 """
 
 __all__ = []
 
 import json
 import subprocess
+from typing import Optional
 
 import torch
 from hydra.core.hydra_config import HydraConfig
@@ -40,6 +40,7 @@ from torchvision.transforms import v2
 from diffusion_models.diffusion_trainer import DiffusionTrainer
 from diffusion_models.models.SimpleUnet import SimpleUnet
 from diffusion_models.utils.schemas import (
+  EvaluationConfiguration,
   LogConfiguration,
   TrainingConfiguration,
 )
@@ -70,6 +71,9 @@ def train(
   seed: int,
   device: str,
   reverse_image_size: int,
+  resume_from: Optional[str] = None,
+  evaluation: Optional[EvaluationConfiguration] = None,
+  eval_dataset: Optional[datasets.VisionDataset] = None,
 ) -> None:
   """Instantiated by hydra-zen from the config, then run."""
   # The raw (uninstantiated) config is the source of truth for the run.
@@ -98,6 +102,9 @@ def train(
     device=device,
     output_directory=output_directory,
     run_config=run_config,
+    resume_from=resume_from,
+    evaluation_configuration=evaluation,
+    evaluation_dataset=eval_dataset,
   )
   trainer.train()
 
@@ -111,8 +118,11 @@ def _capture_config(cfg: DictConfig) -> None:
   _RAW_CONFIG = cfg
 
 
-if __name__ == "__main__":
+def main() -> None:
+  """Run the training with hydra, reading overrides from ``sys.argv``."""
   store.add_to_hydra_store()
   zen(train, pre_call=_capture_config).hydra_main(
-    config_name="baseline", config_path="config", version_base="1.3"
+    config_name="baseline",
+    config_path="pkg://diffusion_models.conf",
+    version_base="1.3",
   )

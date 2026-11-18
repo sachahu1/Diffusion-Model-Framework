@@ -172,3 +172,4 @@ save/
 *.bin
 examples/generated*.gif
 test.ipynb
+outputs/

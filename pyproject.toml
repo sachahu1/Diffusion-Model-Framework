@@ -15,6 +15,9 @@ dependencies = [
     "transformers>=4.46.1,<5",
 ]
 
+[project.scripts]
+diffusion-models = "diffusion_models.cli:main"
+
 [project.urls]
 Documentation = "https://www.sachahu.com/docs/diffusion-model-framework/latest/index.html"
 Repository = "https://github.com/sachahu1/Diffusion-Model-Framework"
@@ -38,7 +41,11 @@ documentation = [
     "gitpython>=3.1.43,<4",
 ]
 coco = ["pycocotools>=2.0.8,<3"]
+evaluation = [
+    "torchmetrics[image]>=1.5,<2",
+]
 training = [
+    "click>=8.1,<9",
     "hydra-core>=1.3.2,<2",
     "hydra-zen>=0.14,<1",
 ]
@@ -121,3 +128,6 @@ prerelease_token = "rc"
 match = "(feature/*)"
 prerelease = true
 prerelease_token = "alpha"
+
+[tool.coverage.run]
+source = ["diffusion_models"]
