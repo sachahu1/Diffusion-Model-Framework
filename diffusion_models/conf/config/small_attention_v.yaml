@@ -1,0 +1,18 @@
+# @package _global_
+# small_attention_ema with v-prediction. The model predicts the velocity
+# v = sqrt(alpha_bar) * noise - sqrt(1 - alpha_bar) * image, which stays
+# well-conditioned at the zero-terminal-SNR end of the schedule, and sampling
+# uses trailing timestep spacing so the last step is pure noise (t = 999).
+# Launch with:
+#   diffusion-models train +config=small_attention_v
+defaults:
+  - small_attention_ema
+  - override /diffuser: ddim
+
+training:
+  training_name: small_attention_v
+
+diffuser:
+  prediction_type: V  # enum member name (Epsilon or V)
+  mode: Trailing
+  number_of_steps: 50  # v-prediction + trailing spacing: 50 DDIM steps for FID/samples

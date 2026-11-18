@@ -1,0 +1,30 @@
+# @package _global_
+# A GroupNorm/attention Unet with EMA weights, bf16 mixed precision and frequent
+# checkpointing, applied on top of the baseline. Launch with:
+#   diffusion-models train +config=small_attention_ema
+defaults:
+  - override /model: small_attention_unet
+  - override /eval_dataset: celeba_valid
+
+training:
+  training_name: small_attention_ema
+  batch_size: 96  # ~5.3 GB peak with compile; 128 peaks at ~6.7 GB
+  checkpoint_rate: 10
+  latest_checkpoint_rate: 1  # rolling latest.pt, overwritten every epoch
+  mixed_precision_training: true
+  mixed_precision_dtype: bfloat16  # no GradScaler needed
+  channels_last: true  # fast with mixed precision, very slow in fp32
+  compile: true  # ~1.5x faster; the first step takes about a minute to compile
+  gradient_clip: 1.0
+  ema_decay: 0.999
+  ema_warmup_steps: 1000
+
+optimizer:
+  fused: true
+
+logging:
+  image_rate: 1695  # once per epoch: 162770 CelebA images // batch size 96
+  weight_rate: 1695
+
+evaluation:
+  fid_rate: 5  # FID/KID of the EMA model every 5 epochs (and after the last)
