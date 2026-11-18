@@ -25,7 +25,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install dependencies
-        run: uv sync --locked --group test --group evaluation
+        run: uv sync --locked --group test --extra training --extra evaluation
       #----------------------------------------------
       #    add matrix specifics and run test suite
       #----------------------------------------------
@@ -47,7 +47,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install dependencies
-        run: uv sync --locked --group dev --group training --group evaluation
+        run: uv sync --locked --group dev --extra training --extra evaluation
       - name: Run ty
         run: uv run ty check diffusion_models
 

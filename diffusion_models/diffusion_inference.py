@@ -36,8 +36,8 @@ class DiffusionInference:
     self.image_size = image_shape[1]
     """The size of the image."""
 
-    self.model = model.to(device)
-    """The trained diffusion model."""
+    self.model = model.to(device).eval()
+    """The trained diffusion model, in eval mode."""
 
     self.reverse_transforms = reverse_transforms
     """The set of reverse transforms."""
