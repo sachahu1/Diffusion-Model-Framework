@@ -1,4 +1,4 @@
 """Image quality evaluation (FID / KID) for diffusion models.
 
-Requires the ``evaluation`` dependency group (``uv sync --group evaluation``).
+Requires the ``evaluation`` extra (``pip install diffusion-model-framework[evaluation]``).
 """

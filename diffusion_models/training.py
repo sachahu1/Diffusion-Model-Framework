@@ -12,7 +12,7 @@ gets its own directory (``runs/<name>/<timestamp>``) holding:
 The standard config is ``diffusion_models/conf/baseline.yaml``, presets live in
 ``diffusion_models/conf/config/`` and the overridable config groups are
 registered in ``diffusion_models/_store``. Install the extra dependencies with
-``uv sync --group training``, then run::
+``pip install diffusion-model-framework[training]``, then run::
 
   diffusion-models train
   diffusion-models train training.batch_size=64 optimizer=adopt

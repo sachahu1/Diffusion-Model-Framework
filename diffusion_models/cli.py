@@ -28,7 +28,7 @@ def _run_hydra(command, module, extra, overrides, config_directories):
   except ModuleNotFoundError as error:  # pragma: no cover
     raise click.ClickException(
       f"Missing {extra} dependency ({error.name}). "
-      "Install them with `uv sync --group training`."
+      f"Install them with `pip install diffusion-model-framework[{extra}]`."
     ) from error
 
   arguments = list(overrides)
@@ -85,7 +85,7 @@ def infer(config_directories: Tuple[pathlib.Path, ...], overrides) -> None:
   `use_ema=false`, `device=cpu`. Pass `--help` to list the config groups.
   """
   _run_hydra(
-    "infer", "diffusion_models.inference", "training", overrides, config_directories
+    "infer", "diffusion_models.inference", "inference", overrides, config_directories
   )
 
 
@@ -106,7 +106,7 @@ def fid(
 ) -> None:
   """Compute FID (and KID) of a training CHECKPOINT.
 
-  Needs the `evaluation` and `training` dependency groups. Only compare scores
+  Needs the `evaluation` extra. Only compare scores
   that use the same number of samples.
   """
   try:
@@ -114,7 +114,7 @@ def fid(
   except ModuleNotFoundError as error:  # pragma: no cover
     raise click.ClickException(
       f"Missing evaluation dependency ({error.name}). "
-      "Install them with `uv sync --group training --group evaluation`."
+      "Install them with `pip install diffusion-model-framework[evaluation]`."
     ) from error
 
   metrics = evaluate_checkpoint(
