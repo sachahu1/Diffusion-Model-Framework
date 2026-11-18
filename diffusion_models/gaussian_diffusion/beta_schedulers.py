@@ -36,9 +36,9 @@ class BaseBetaScheduler:
     """
     self.steps: int = steps
     """The number of steps for the beta scheduler."""
-    self.betas = None
+    self.betas: torch.Tensor = None  # ty: ignore[invalid-assignment]
     """The :math:`\\beta` computed according to :meth:`~.BaseBetaScheduler.sample_betas`."""
-    self.alpha_bars = None
+    self.alpha_bars: torch.Tensor = None  # ty: ignore[invalid-assignment]
     """The :math:`\\bar{\\alpha}` computed according to :meth:`~.BaseBetaScheduler.compute_alpha_bar`."""
 
     if initialize:
@@ -161,9 +161,9 @@ class LinearBetaScheduler(BaseBetaScheduler):
         of betas.
       enforce_zero_terminal_snr: Whether to enforce zero terminal SNR.
     """
-    self.beta_start: int = beta_start
+    self.beta_start: float = beta_start
     """The starting value of the betas."""
-    self.beta_end: int = beta_end
+    self.beta_end: float = beta_end
     """The end value of the betas."""
     super().__init__(
       steps=steps,

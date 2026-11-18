@@ -273,7 +273,7 @@ def _single_tensor_adopt(
 
     if weight_decay != 0:
       if decoupled:
-        param.add_(param, alpha=-lr * weight_decay)
+        param.add_(param, alpha=-lr * weight_decay)  # ty: ignore[invalid-argument-type]
       else:
         grad = grad.add(param, alpha=weight_decay)
 
@@ -296,7 +296,7 @@ def _single_tensor_adopt(
     else:
       exp_avg.mul_(beta1).addcdiv_(grad, denom, value=1 - beta1)
 
-    param.add_(exp_avg, alpha=-lr)
+    param.add_(exp_avg, alpha=-lr)  # ty: ignore[invalid-argument-type]
     exp_avg_sq.mul_(beta2).addcmul_(grad, grad.conj(), value=1 - beta2)
 
 
@@ -344,7 +344,7 @@ def _multi_tensor_adopt(
   assert not differentiable, "_foreach ops don't support autograd"
 
   grouped_tensors = Optimizer._group_tensors_by_device_and_dtype(
-    [params, grads, exp_avgs, exp_avg_sqs, state_steps]  # type: ignore[list-item]
+    [params, grads, exp_avgs, exp_avg_sqs, state_steps]  # type: ignore[list-item]  # ty: ignore[invalid-argument-type]
   )
   for (
     device_params_,
@@ -381,7 +381,7 @@ def _multi_tensor_adopt(
 
     if weight_decay != 0:
       if decoupled:
-        torch._foreach_add_(
+        torch._foreach_add_(  # ty: ignore[no-matching-overload]
           device_params, device_params, alpha=-lr * weight_decay
         )
       else:
@@ -408,7 +408,7 @@ def _multi_tensor_adopt(
         device_exp_avgs, device_grads, exp_avg_sq_sqrt, value=1 - beta1
       )
 
-    torch._foreach_add_(device_params, device_exp_avgs, alpha=-lr)
+    torch._foreach_add_(device_params, device_exp_avgs, alpha=-lr)  # ty: ignore[no-matching-overload]
     torch._foreach_mul_(device_exp_avg_sqs, beta2)
     torch._foreach_addcmul_(
       device_exp_avg_sqs, device_grads, device_grads, value=1 - beta2
@@ -474,7 +474,7 @@ def adopt(
     raise RuntimeError("torch.jit.script not supported with fused optimizers")
 
   if fused and not torch.jit.is_scripting():
-    func = _fused_adopt
+    raise NotImplementedError("Fused ADOPT is not implemented.")
   elif foreach and not torch.jit.is_scripting():
     func = _multi_tensor_adopt
   else:

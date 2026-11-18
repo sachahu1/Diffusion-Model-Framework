@@ -49,7 +49,7 @@ class ImageQualityEvaluator:
     """
     self.real_dataset = real_dataset
     """The reference images."""
-    self.number_of_samples = min(number_of_samples, len(real_dataset))
+    self.number_of_samples = min(number_of_samples, len(real_dataset))  # ty: ignore[invalid-argument-type]
     """The number of real and generated images compared."""
     self.batch_size = batch_size
     """The batch size used for sampling and feature extraction."""

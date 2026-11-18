@@ -1,5 +1,6 @@
 # Diffusion Model taken from DeepFindr (https://www.youtube.com/@DeepFindr)
 import math
+from typing import Optional
 
 import torch
 from torch import nn
@@ -73,7 +74,7 @@ class ConditionedSimpleUnet(BaseDiffusionModel):
     self,
     x: torch.Tensor,
     timestep: torch.Tensor,
-    labels: torch.Tensor = None,
+    labels: Optional[torch.Tensor] = None,
   ):
     # if self.training:
     #   x = self.augmentations(x)
