@@ -165,3 +165,11 @@ test_results/
 data/
 checkpoints/
 runs/
+
+# Local artifacts: model weights, generated media and scratch notebooks
+save/
+*.pt
+*.bin
+examples/generated*.gif
+test.ipynb
+outputs/

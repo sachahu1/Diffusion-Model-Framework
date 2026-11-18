@@ -1,0 +1,21 @@
+# Inference configuration: the training baseline (so the model, diffuser and
+# beta scheduler groups can be rebuilt and overridden the same way) plus the
+# options of `diffusion-models infer`. Use the same overrides as the training run, e.g.
+#   diffusion-models infer checkpoint=<path> +config=small_attention_ema
+defaults:
+  - baseline
+  - _self_
+
+# The checkpoint holding the trained weights (required).
+checkpoint: ???
+# Use the EMA weights when the checkpoint has them.
+use_ema: true
+number_of_images: 25
+# Also save the denoising process as a GIF.
+save_gif: false
+# Overrides the number of DDIM sampling steps, when the diffuser has that option.
+steps: null
+
+hydra:
+  run:
+    dir: outputs/infer/${now:%Y-%m-%d_%H-%M-%S}

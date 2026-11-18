@@ -1,4 +1,5 @@
 import logging
+import math
 from typing import Callable, Tuple
 
 import torch
@@ -35,8 +36,8 @@ class DiffusionInference:
     self.image_size = image_shape[1]
     """The size of the image."""
 
-    self.model = model.to(device)
-    """The trained diffusion model."""
+    self.model = model.to(device).eval()
+    """The trained diffusion model, in eval mode."""
 
     self.reverse_transforms = reverse_transforms
     """The set of reverse transforms."""
@@ -45,19 +46,28 @@ class DiffusionInference:
 
   def _visualise_images(self, denoised_images: torch.Tensor):
     reverse_transformed_images = self.reverse_transforms(denoised_images)
-    image_grid = make_grid(reverse_transformed_images, nrow=5)
+    # As square as possible, e.g. 4x4 for 16 images and 5x5 for 25.
+    columns = math.ceil(math.sqrt(len(reverse_transformed_images)))
+    image_grid = make_grid(reverse_transformed_images, nrow=columns)
     pil_images = transforms.ToPILImage()(image_grid)
     return pil_images
 
-  def generate(self, number_of_images: int, save_gif: bool = False) -> Image:
+  def generate(
+    self,
+    number_of_images: int,
+    save_gif: bool = False,
+    gif_path: str = "generated.gif",
+  ) -> Image | None:
     """Generate a batch of images.
 
     Args:
       number_of_images: The number of images to generate.
       save_gif: Whether to save the generation process as a GIF.
+      gif_path: Where the GIF is saved when ``save_gif`` is set.
 
     Returns:
-      A PIL image of the generated images stacked together.
+      A PIL image of the generated images stacked together, or ``None`` when
+      ``save_gif`` is set (the GIF is written to ``gif_path`` instead).
     """
     images = torch.randn(
       (
@@ -82,7 +92,7 @@ class DiffusionInference:
 
       logging.info("Saving GIF")
       frame_one.save(
-        "generated.gif",
+        gif_path,
         format="GIF",
         append_images=images,
         save_all=True,

@@ -11,12 +11,30 @@ from diffusion_models.gaussian_diffusion.beta_schedulers import (
   BaseBetaScheduler,
 )
 from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
-from diffusion_models.utils.schemas import Checkpoint, Timestep
+from diffusion_models.utils.schemas import (
+  Checkpoint,
+  PredictionType,
+  Timestep,
+)
 
 
 class DenoisingMode(str, Enum):
+  @classmethod
+  def _missing_(cls, value):
+    # Configs saved in checkpoints spell enums by member name ("Trailing").
+    if isinstance(value, str):
+      for member in cls:
+        if value.lower() == member.name.lower():
+          return member
+    return None
+
   Linear = "linear"
   Quadratic = "quadratic"
+  Trailing = "trailing"
+  """Evenly spaced steps that end on the last (pure noise) timestep.
+
+  Needed to sample models trained with zero terminal SNR properly; linear and
+  quadratic spacing never reach the final timestep."""
 
 
 class DdimDiffuser(BaseDiffuser):
@@ -25,19 +43,23 @@ class DdimDiffuser(BaseDiffuser):
     beta_scheduler: BaseBetaScheduler,
     mode: DenoisingMode = DenoisingMode.Quadratic,
     number_of_steps: int = 20,
+    prediction_type: PredictionType = PredictionType.Epsilon,
   ):
     """Initializes the class instance.
 
     Args:
       beta_scheduler (BaseBetaScheduler): The beta scheduler instance to be used.
+      mode: How the sampling timesteps are spaced.
+      number_of_steps: Number of denoising steps.
+      prediction_type: Whether the model predicts the noise or the velocity.
 
     """
-    super().__init__(beta_scheduler)
+    super().__init__(beta_scheduler, prediction_type)
 
     self.number_of_steps = number_of_steps
     """Number of steps to use in the denoising process."""
 
-    self.mode = mode
+    self.mode = DenoisingMode(mode)
     """Linear or Quadratic sampling."""
 
     self.device: str = "cpu"
@@ -45,6 +67,17 @@ class DdimDiffuser(BaseDiffuser):
 
   @property
   def steps(self) -> List[int]:
+    if self.mode == DenoisingMode.Trailing:
+      stride = self.beta_scheduler.steps / self.number_of_steps
+      time_steps = (
+        np.round(np.arange(1, self.number_of_steps + 1) * stride).astype(int)
+        - 1
+      )
+      # Unlike the other modes there is no +1 shift: the last step is the
+      # final timestep, ``steps - 1``.
+      self._time_steps = time_steps
+      self._time_steps_prev = np.concatenate([[0], time_steps[:-1]])
+      return list(range(self.number_of_steps))[::-1]
     if self.mode == DenoisingMode.Linear:
       a = self.beta_scheduler.steps // self.number_of_steps
       time_steps = np.asarray(list(range(0, self.beta_scheduler.steps, a)))
@@ -56,7 +89,7 @@ class DdimDiffuser(BaseDiffuser):
         ** 2
       ).astype(int)
     self._time_steps = time_steps + 1
-    self._time_steps_prev = np.concatenate([[0], time_steps[:-1]])
+    self._time_steps_prev = np.concatenate([[0], self._time_steps[:-1]])
     return list(range(self.number_of_steps))[::-1]
 
   def get_timestep(self, number_of_images: int, idx: int) -> Timestep:
@@ -88,7 +121,8 @@ class DdimDiffuser(BaseDiffuser):
         steps=checkpoint.beta_scheduler_config.steps,
         betas=checkpoint.beta_scheduler_config.betas,
         alpha_bars=checkpoint.beta_scheduler_config.alpha_bars,
-      )
+      ),
+      prediction_type=PredictionType(checkpoint.prediction_type),
     )
 
   def to(self, device: str = "cpu"):
@@ -157,13 +191,16 @@ class DdimDiffuser(BaseDiffuser):
     current_timestep = timestep.current
     previous_timestep = timestep.previous
 
-    epsilon_theta = model(images, current_timestep)
+    output = model(images, current_timestep)
+    epsilon_theta, x0_theta = self.to_epsilon_and_x0(
+      output, images, current_timestep
+    )
 
     alpha_bar_t = self.beta_scheduler.alpha_bars.gather(
       dim=0, index=current_timestep
     ).reshape(-1, 1, 1, 1)
 
-    alpha_bar_t_prev = self.beta_scheduler.alpha_bars.gather(
+    alpha_bar_t_prev = self.beta_scheduler.alpha_bars.gather(  # ty: ignore[no-matching-overload]
       dim=0, index=previous_timestep
     ).reshape(-1, 1, 1, 1)
 
@@ -174,6 +211,14 @@ class DdimDiffuser(BaseDiffuser):
     )
 
     epsilon_t = torch.randn_like(images)
+
+    if x0_theta is not None:
+      # Division free form, valid where alpha_bar_t == 0.
+      mu = (
+        torch.sqrt(alpha_bar_t_prev) * x0_theta
+        + torch.sqrt(1 - alpha_bar_t_prev - sigma**2) * epsilon_theta
+      )
+      return mu + sigma * epsilon_t
 
     mu = (
       torch.sqrt(alpha_bar_t_prev / alpha_bar_t) * images

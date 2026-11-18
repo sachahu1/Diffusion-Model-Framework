@@ -108,7 +108,7 @@ class SimpleUnet(BaseDiffusionModel):
     # Edit: Corrected a bug found by Jakub C (see YouTube comment)
     self.output = nn.Conv2d(up_channels[-1], out_dim, 1)
 
-  def forward(self, x, timestep):
+  def forward(self, x: torch.Tensor, timestep: torch.Tensor, labels=None):
     # if self.training:
     #   x = self.augmentations(x)
 

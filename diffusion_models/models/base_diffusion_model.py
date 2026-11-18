@@ -1,5 +1,5 @@
 import abc
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import torch
 from torch import nn
@@ -61,6 +61,7 @@ class BaseDiffusionModel(nn.Module, abc.ABC):
     self,
     x: torch.Tensor,
     timestep: torch.Tensor,
+    labels: Optional[torch.Tensor],
   ) -> torch.Tensor:
     """Forward pass of the diffusion model.
 
@@ -70,13 +71,16 @@ class BaseDiffusionModel(nn.Module, abc.ABC):
     Args:
       x: A batch of noisy images.
       timestep: The timesteps of each image in the batch.
+      labels: Optional labels to be passed when conditioning the diffusion model.
 
     Returns:
       A tensor representing the noise predicted for each image.
     """
     raise NotImplementedError
 
-  def to(self, device: str = "cpu") -> "BaseDiffusionModel":
+  def to(  # ty: ignore[incompatible-method-override]
+    self, device: str = "cpu"
+  ) -> "BaseDiffusionModel":
     """Moves the model to the specified device.
 
     This performs a similar behaviour to the `to` method of PyTorch. moving the
@@ -99,5 +103,5 @@ class BaseDiffusionModel(nn.Module, abc.ABC):
       A compiled diffusion model.
     """
     model = torch.compile(self, *args, **kwargs)
-    model.to = self.to
+    model.to = self.to  # ty: ignore[missing-attribute]
     return model

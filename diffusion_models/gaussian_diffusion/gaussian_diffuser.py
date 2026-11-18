@@ -7,21 +7,29 @@ from diffusion_models.gaussian_diffusion.base_diffuser import BaseDiffuser
 from diffusion_models.gaussian_diffusion.beta_schedulers import (
   BaseBetaScheduler,
 )
-from diffusion_models.utils.schemas import Checkpoint, Timestep
+from diffusion_models.utils.schemas import (
+  Checkpoint,
+  PredictionType,
+  Timestep,
+)
 
 if TYPE_CHECKING:
   from diffusion_models.models.base_diffusion_model import BaseDiffusionModel
 
 
 class GaussianDiffuser(BaseDiffuser):
-  def __init__(self, beta_scheduler: BaseBetaScheduler):
+  def __init__(
+    self,
+    beta_scheduler: BaseBetaScheduler,
+    prediction_type: PredictionType = PredictionType.Epsilon,
+  ):
     """Initializes the class instance.
 
     Args:
       beta_scheduler (BaseBetaScheduler): The beta scheduler instance to be used.
 
     """
-    super().__init__(beta_scheduler)
+    super().__init__(beta_scheduler, prediction_type)
     self.device: str = "cpu"
     """The device to use. Defaults to cpu."""
 
@@ -52,7 +60,8 @@ class GaussianDiffuser(BaseDiffuser):
         steps=checkpoint.beta_scheduler_config.steps,
         betas=checkpoint.beta_scheduler_config.betas,
         alpha_bars=checkpoint.beta_scheduler_config.alpha_bars,
-      )
+      ),
+      prediction_type=PredictionType(checkpoint.prediction_type),
     )
 
   def to(self, device: str = "cpu"):
@@ -120,10 +129,11 @@ class GaussianDiffuser(BaseDiffuser):
     alpha_bar_t = self.beta_scheduler.alpha_bars.gather(
       dim=0, index=current_timestep
     ).reshape(-1, 1, 1, 1)
+    epsilon, _ = self.to_epsilon_and_x0(
+      model(images, current_timestep), images, current_timestep
+    )
     mu = (1 / torch.sqrt(alpha_t)) * (
-      images
-      - model(images, current_timestep)
-      * (beta_t / torch.sqrt(1 - alpha_bar_t))
+      images - epsilon * (beta_t / torch.sqrt(1 - alpha_bar_t))
     )
 
     if current_timestep[0] == 0:
