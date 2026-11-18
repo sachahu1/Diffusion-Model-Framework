@@ -16,5 +16,10 @@ diffuser_store(
   name="ddim",
 )
 diffuser_store(
-  builds(GaussianDiffuser, beta_scheduler="${beta_scheduler}"), name="ddpm"
+  builds(
+    GaussianDiffuser,
+    beta_scheduler="${beta_scheduler}",
+    populate_full_signature=True,
+  ),
+  name="ddpm",
 )
