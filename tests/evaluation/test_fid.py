@@ -2,12 +2,18 @@ import pytest
 import torch
 from torch.utils.data import TensorDataset
 
+from diffusion_models.diffusion_trainer import DiffusionTrainer
 from diffusion_models.evaluation import fid as fid_module
 from diffusion_models.gaussian_diffusion.beta_schedulers import (
   LinearBetaScheduler,
 )
 from diffusion_models.gaussian_diffusion.ddimm_diffuser import DdimDiffuser
 from diffusion_models.models.SmallAttentionUnet import SmallAttentionUnet
+from diffusion_models.utils.schemas import (
+  EvaluationConfiguration,
+  LogConfiguration,
+  TrainingConfiguration,
+)
 
 
 class FakeMetric:
@@ -141,3 +147,76 @@ def test_sampling_noise_is_seeded():
   run(2)
   assert torch.equal(seen[0], seen[1])
   assert not torch.equal(seen[0], seen[2])
+
+
+def _trainer(tmp_path, **evaluation):
+  model = _model()
+  return DiffusionTrainer(
+    model=model,
+    dataset=_dataset(8),
+    optimizer=torch.optim.AdamW(model.parameters(), lr=1e-3),
+    training_configuration=TrainingConfiguration(
+      training_name="test",
+      batch_size=4,
+      learning_rate=1e-3,
+      number_of_epochs=5,
+      num_workers=0,
+      ema_decay=0.9,
+    ),
+    loss_function=torch.nn.functional.mse_loss,
+    log_configuration=LogConfiguration(number_of_images=0),
+    device="cpu",
+    output_directory=tmp_path,
+    evaluation_configuration=EvaluationConfiguration(
+      num_workers=0, number_of_samples=4, batch_size=4, **evaluation
+    ),
+    evaluation_dataset=_dataset(4),
+  )
+
+
+def test_trainer_logs_fid_at_rate_and_after_last_epoch(tmp_path):
+  trainer = _trainer(tmp_path, fid_rate=2)
+  logged = []
+  original = trainer.tensorboard_manager.log_metrics
+
+  def record(metrics, global_step):
+    if any(name.startswith("Eval/") for name in metrics):
+      logged.append((global_step, sorted(metrics)))
+    original(metrics, global_step)
+
+  trainer.tensorboard_manager.log_metrics = record
+  trainer.train()
+
+  steps_per_epoch = 2
+  # Epochs 2 and 4 are due; epoch 5 is the last epoch.
+  assert [step for step, _ in logged] == [2 * 2, 4 * 2, 5 * 2]
+  assert logged[0][1] == ["Eval/FID", "Eval/KID", "Eval/KID_std"]
+  assert steps_per_epoch == len(trainer.dataloader)
+  # FID is evaluated on the EMA model, which stays in eval mode.
+  assert not trainer.ema.model.training
+  assert trainer.model.training
+
+
+def test_trainer_without_fid_rate_has_no_evaluator(tmp_path):
+  trainer = _trainer(tmp_path, fid_rate=None)
+  assert trainer.evaluator is None
+
+
+def test_trainer_requires_an_evaluation_dataset(tmp_path):
+  model = _model()
+  with pytest.raises(ValueError, match="evaluation_dataset"):
+    DiffusionTrainer(
+      model=model,
+      dataset=_dataset(8),
+      optimizer=torch.optim.AdamW(model.parameters()),
+      training_configuration=TrainingConfiguration(
+        training_name="t",
+        batch_size=4,
+        learning_rate=1e-3,
+        number_of_epochs=1,
+        num_workers=0,
+      ),
+      device="cpu",
+      output_directory=tmp_path,
+      evaluation_configuration=EvaluationConfiguration(fid_rate=1),
+    )
