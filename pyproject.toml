@@ -116,6 +116,10 @@ version_toml = [
     "pyproject.toml:project.version"
 ]
 upload_to_pypi = false
+# Keep uv.lock in sync with the version bump, otherwise `uv sync --locked`
+# fails in CI after every release.
+build_command = "uv lock"
+assets = ["uv.lock"]
 upload_to_release = true
 
 [tool.semantic_release.branches.main]
