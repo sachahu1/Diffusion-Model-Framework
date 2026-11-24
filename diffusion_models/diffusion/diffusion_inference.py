@@ -1,0 +1,146 @@
+import logging
+import math
+from typing import Callable, Optional, Tuple
+
+import torch
+from PIL.Image import Image
+from torchvision import transforms
+from torchvision.utils import make_grid
+
+from diffusion_models.diffusion.models.base_diffusion_model import (
+  BaseDiffusionModel,
+)
+
+
+class DiffusionInference:
+  def __init__(
+    self,
+    model: BaseDiffusionModel,
+    reverse_transforms: Callable = lambda x: x,
+    image_shape: Tuple[int, int] = (3, 64),
+    device: str = "cuda",
+    decode: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+  ):
+    """A diffusion inference framework.
+
+    This is a simplified inference framework to easily start using your
+    diffusion model.
+
+    Args:
+      model: The trained diffusion model.
+      reverse_transforms: A set of reverse transforms.
+      image_shape: The shape of the image to produce. This is a tuple where the
+        first value is the number of channels and the second is the size of the
+        image. Images are expected to be square.
+      device: The device to run the inference on.
+      decode: Maps the model's samples to images in ``[-1, 1]`` before the
+        reverse transforms; the decoder of a latent diffusion model.
+    """
+    self.image_channels = image_shape[0]
+    """The number of channels of the image."""
+    self.image_size = image_shape[1]
+    """The size of the image."""
+
+    self.model = model.to(device).eval()
+    """The trained diffusion model, in eval mode."""
+
+    self.reverse_transforms = reverse_transforms
+    """The set of reverse transforms."""
+    self.device = device
+    """The device to run the inference on."""
+    self.decode = decode
+    """Maps samples to images, when the model does not sample images directly."""
+
+  def _visualise_images(self, denoised_images: torch.Tensor):
+    if self.decode is not None:
+      denoised_images = self.decode(denoised_images)
+    reverse_transformed_images = self.reverse_transforms(denoised_images)
+    # As square as possible, e.g. 4x4 for 16 images and 5x5 for 25.
+    columns = math.ceil(math.sqrt(len(reverse_transformed_images)))
+    image_grid = make_grid(reverse_transformed_images, nrow=columns)
+    pil_images = transforms.ToPILImage()(image_grid)
+    return pil_images
+
+  @torch.no_grad()
+  def generate(
+    self,
+    number_of_images: int,
+    save_gif: bool = False,
+    gif_path: str = "generated.gif",
+  ) -> Image | None:
+    """Generate a batch of images.
+
+    Args:
+      number_of_images: The number of images to generate.
+      save_gif: Whether to save the generation process as a GIF.
+      gif_path: Where the GIF is saved when ``save_gif`` is set.
+
+    Returns:
+      A PIL image of the generated images stacked together, or ``None`` when
+      ``save_gif`` is set (the GIF is written to ``gif_path`` instead).
+    """
+    images = torch.randn(
+      (
+        number_of_images,
+        self.image_channels,
+        self.image_size,
+        self.image_size,
+      ),
+      device=self.device,
+    )
+
+    denoised_images = self.model.denoise(images)
+
+    if save_gif:
+      pil_images = []
+      for timestep, images in enumerate(denoised_images):
+        pil_image_grid = self._visualise_images(images)
+        pil_images.append(pil_image_grid)
+
+      images = pil_images[1::2]
+      frame_one = pil_images[0]
+
+      logging.info("Saving GIF")
+      frame_one.save(
+        gif_path,
+        format="GIF",
+        append_images=images,
+        save_all=True,
+        duration=[10 for i in range(len(images))] + [2000],
+        loop=0,
+      )
+
+    else:
+      pil_image_grid = self._visualise_images(denoised_images[-1])
+      return pil_image_grid
+
+  @torch.no_grad()
+  def get_generator(self, number_of_images: int = 1):
+    """An image generator.
+
+    This method is a generator that will generate a batch of images. At
+    every call, the generator denoises the images by one more step until the
+    image is fully generated. This can be particularly useful for running the
+    image generation step by step or for a streaming API.
+
+    Args:
+      number_of_images: The number of images the generator should generate.
+    """
+    images = torch.randn(
+      (
+        number_of_images,
+        self.image_channels,
+        self.image_size,
+        self.image_size,
+      ),
+      device=self.device,
+    )
+
+    for i in self.model.diffuser.steps:
+      timestep = self.model.diffuser.get_timestep(images.shape[0], i)
+      images = self.model.diffuser._denoise_step(
+        images, model=self.model, timestep=timestep
+      )
+      images = self.model.diffuser.clip(images)
+
+      yield self._visualise_images(images)

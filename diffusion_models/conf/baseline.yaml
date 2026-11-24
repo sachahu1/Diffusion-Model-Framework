@@ -1,6 +1,6 @@
 # The standard training configuration. Config groups (model, diffuser, ...)
 # are registered by diffusion_models/_store; override them from the command line,
-# e.g. `diffusion-models train optimizer=adopt training.batch_size=64`.
+# e.g. `diffusion-models train diffuser optimizer=adopt training.batch_size=64`.
 # Presets from conf/config/ are applied with `+config=<name>`.
 defaults:
   - _self_
@@ -8,6 +8,7 @@ defaults:
   - diffuser: ddim
   - beta_scheduler: linear
   - optimizer: adamw
+  - loss: mse  # the regression loss of the diffusion objective
   - dataset: celeba
   - eval_dataset: null  # e.g. eval_dataset=celeba_valid, for FID
 
@@ -18,9 +19,13 @@ resume_from: null
 image_size: 64
 image_channels: 3
 reverse_image_size: 128
+# The reference images of FID; they differ from the training data for a latent
+# diffusion model, which trains on latents.
+eval_image_size: ${image_size}
+eval_image_channels: ${image_channels}
 
 training:
-  _target_: diffusion_models.utils.schemas.TrainingConfiguration
+  _target_: diffusion_models.core.schemas.TrainingConfiguration
   training_name: diffusion
   batch_size: 256
   learning_rate: ${optimizer.lr}
@@ -30,20 +35,24 @@ training:
   mixed_precision_dtype: bfloat16
   channels_last: false
   gradient_clip: null
+  lr_schedule: null  # null (constant), cosine or linear
+  lr_warmup_steps: 0
+  lr_min_ratio: 0.0  # the final rate as a fraction of the learning rate
+  lr_schedule_start_epoch: 0  # decay a finished run: the epoch of its checkpoint
   num_workers: 4
   pin_memory: true
   persistent_workers: true
   compile: false
 
 logging:
-  _target_: diffusion_models.utils.schemas.LogConfiguration
+  _target_: diffusion_models.core.schemas.LogConfiguration
   log_rate: 10
   image_rate: 635
   number_of_images: 5
   weight_rate: 635
 
 evaluation:
-  _target_: diffusion_models.utils.schemas.EvaluationConfiguration
+  _target_: diffusion_models.core.schemas.EvaluationConfiguration
   fid_rate: null  # epochs between FID/KID evaluations; null disables
   number_of_samples: 5000
   batch_size: 100

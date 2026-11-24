@@ -1,6 +1,6 @@
 from hydra_zen import builds, store
 
-from diffusion_models.gaussian_diffusion.beta_schedulers import (
+from diffusion_models.diffusion.diffusers.beta_schedulers import (
   CosineBetaScheduler,
   LinearBetaScheduler,
 )

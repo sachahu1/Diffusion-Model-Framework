@@ -1,7 +1,9 @@
 from hydra_zen import builds, store
 
-from diffusion_models.models.SimpleUnet import SimpleUnet
-from diffusion_models.models.SmallAttentionUnet import SmallAttentionUnet
+from diffusion_models.diffusion.models.SimpleUnet import SimpleUnet
+from diffusion_models.diffusion.models.SmallAttentionUnet import (
+  SmallAttentionUnet,
+)
 
 model_store = store(group="model")
 

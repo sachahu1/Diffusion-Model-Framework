@@ -1,7 +1,7 @@
 from hydra_zen import builds, store
 
-from diffusion_models.gaussian_diffusion.ddimm_diffuser import DdimDiffuser
-from diffusion_models.gaussian_diffusion.gaussian_diffuser import (
+from diffusion_models.diffusion.diffusers.ddimm_diffuser import DdimDiffuser
+from diffusion_models.diffusion.diffusers.gaussian_diffuser import (
   GaussianDiffuser,
 )
 

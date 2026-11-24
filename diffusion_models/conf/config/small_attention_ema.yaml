@@ -1,7 +1,7 @@
 # @package _global_
 # A GroupNorm/attention Unet with EMA weights, bf16 mixed precision and frequent
 # checkpointing, applied on top of the baseline. Launch with:
-#   diffusion-models train +config=small_attention_ema
+#   diffusion-models train diffuser +config=small_attention_ema
 defaults:
   - override /model: small_attention_unet
   - override /eval_dataset: celeba_valid

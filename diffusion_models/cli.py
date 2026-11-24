@@ -69,7 +69,7 @@ def train(config_directories: Tuple[pathlib.Path, ...], overrides) -> None:
   Pass `--help` to list the available config groups.
   """
   _run_hydra(
-    "train", "diffusion_models.training", "training", overrides, config_directories
+    "train", "diffusion_models.diffusion.training", "training", overrides, config_directories
   )
 
 
@@ -85,7 +85,7 @@ def infer(config_directories: Tuple[pathlib.Path, ...], overrides) -> None:
   `use_ema=false`, `device=cpu`. Pass `--help` to list the config groups.
   """
   _run_hydra(
-    "infer", "diffusion_models.inference", "inference", overrides, config_directories
+    "infer", "diffusion_models.diffusion.inference", "inference", overrides, config_directories
   )
 
 
@@ -110,7 +110,7 @@ def fid(
   that use the same number of samples.
   """
   try:
-    from diffusion_models.evaluation.checkpoint import evaluate_checkpoint
+    from diffusion_models.diffusion.evaluation import evaluate_checkpoint
   except ModuleNotFoundError as error:  # pragma: no cover
     raise click.ClickException(
       f"Missing evaluation dependency ({error.name}). "
