@@ -1,0 +1,19 @@
+# The standard pipeline configuration, see `diffusion-models train pipeline`.
+# It has no stages: select a pipeline from conf/pipeline/ with `+pipeline=<name>`,
+# e.g. `diffusion-models train pipeline +pipeline=latent_celeba_f8c16`, and
+# override any value, e.g. `stages.diffuser.config.training.number_of_epochs=50`.
+# Check what would run with `--dry-run`, or print the config with
+#   diffusion-models configs show pipeline +pipeline=<name>
+defaults:
+  - _self_
+
+# A run goes to <root>/<name>/<timestamp>, one subdirectory per stage.
+name: pipeline
+root: runs
+# The directory of an earlier run to resume: its finished stages are skipped and
+# an interrupted one continues from its latest checkpoint.
+resume_from: null
+
+# The stages, in the order they run. Each one has a `task` (autoencoder,
+# diffuser or encode) and optionally a `preset`, `overrides` and `config`.
+stages: {}
