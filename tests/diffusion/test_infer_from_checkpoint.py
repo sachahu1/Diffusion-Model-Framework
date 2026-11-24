@@ -164,3 +164,32 @@ def test_infer_falls_back_to_hydra_without_a_stored_config(
   )
   CliRunner().invoke(cli.main, ["infer", f"checkpoint={checkpoint}"])
   assert hydra_calls
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a GPU")
+def test_checkpoint_is_read_on_the_cpu_not_the_gpu(tmp_path, monkeypatch):
+  calls = []
+  original = Checkpoint.from_file.__func__
+
+  def spy(cls, file_path, map_location=None, **options):
+    calls.append(map_location)
+    return original(cls, file_path, map_location, **options)
+
+  monkeypatch.setattr(Checkpoint, "from_file", classmethod(spy))
+  generate_from_checkpoint(
+    _checkpoint(tmp_path / "model.pt"),
+    tmp_path / "out",
+    number_of_images=4,
+    device="cuda",
+  )
+  assert calls and all(location == "cpu" for location in calls)
+
+
+def test_inference_does_not_load_the_optimizer_state(tmp_path):
+  path = _checkpoint(tmp_path / "model.pt")
+  full = Checkpoint.from_file(str(path))
+  light = Checkpoint.from_file(str(path), load_optimizer=False)
+  assert light.optimizer_state_dict == {}
+  assert light.scaler is None
+  assert light.model_state_dict.keys() == full.model_state_dict.keys()
+  assert light.completed_epochs == full.completed_epochs

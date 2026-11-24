@@ -56,7 +56,9 @@ def evaluate_checkpoint(
   Returns:
     The ``FID`` (and ``KID``) scores.
   """
-  checkpoint = Checkpoint.from_file(str(checkpoint_path), map_location=device)
+  checkpoint = Checkpoint.from_file(
+    str(checkpoint_path), map_location="cpu", load_optimizer=False
+  )
   if checkpoint.config_yaml is None:
     raise ValueError(
       "The checkpoint has no embedded config, so the model cannot be rebuilt."
@@ -78,7 +80,8 @@ def evaluate_checkpoint(
     model.diffuser.eta = eta
 
   if (
-    configuration.get("eval_dataset") is not None  # ty: ignore[invalid-argument-type]
+    configuration.get("eval_dataset")  # ty: ignore[invalid-argument-type]
+    is not None
   ):
     real_configuration = configuration.eval_dataset
   else:
@@ -103,7 +106,9 @@ def evaluate_checkpoint(
   decode = None
   if checkpoint.latent_scale_factor is not None:
     # A latent diffusion model: sample latents and decode them.
-    if configuration.get("autoencoder") is None:  # ty: ignore[invalid-argument-type]
+    if (
+      configuration.get("autoencoder") is None  # ty: ignore[invalid-argument-type]
+    ):
       raise ValueError("A latent checkpoint's config needs an autoencoder.")
     autoencoder = instantiate(configuration.autoencoder).to(device).eval()
     normalization = LatentNormalization(
