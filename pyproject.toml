@@ -1,6 +1,6 @@
 [project]
 name = "diffusion-model-framework"
-version = "1.1.0"
+version = "1.2.0-rc.1"
 description = ""
 authors = [{ name = "Sacha Hu", email = "sachahu@mindsparkai.com" }]
 readme = "README.md"
