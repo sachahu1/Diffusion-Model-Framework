@@ -1,0 +1,17 @@
+# @package _global_
+# latent_celeba_f8c16 with 4 residual blocks per level instead of 2 (177M
+# instead of 108M parameters). Launch with:
+#   diffusion-models train diffuser +config=latent_celeba_f8c16_res4 \
+#     source_run=runs/latent_celeba_f8c16/<timestamp> decoder_checkpoint=epoch_1.pt
+# To continue an interrupted run, add `resume_from=<its interrupted.pt>`, and
+# `training.lr_schedule=cosine training.lr_schedule_start_epoch=<epochs done>`
+# to decay its learning rate over the epochs that are left.
+defaults:
+  - latent_celeba_f8c16
+  - _self_
+
+model:
+  num_res_blocks: 4
+
+training:
+  training_name: latent_celeba_f8c16_res4

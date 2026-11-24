@@ -1,0 +1,30 @@
+# @package _global_
+# latent_celeba_f8c16_res4 (4 residual blocks per level, 177M parameters) with
+# the EMA warm-up fixed. Launch with the paths of a pipeline run:
+#   diffusion-models train diffuser +config=latent_celeba_f8c16_res4_ema \
+#     source_run=runs/latent_celeba_f8c16_kl/<timestamp>
+#   (add `decoder_checkpoint=<file>` for a decoder other than final.pt)
+#
+# Why: the EMA used `decay = min(0.999, (1 + n) / (1000 + n))`, which only
+# reaches 0.999 after about a million updates. At 100 epochs (63.5k updates) the
+# effective decay was 0.9845, an averaging window of ~65 steps, so the EMA was
+# nearly the raw weights (experiments 08 and 18). Here `ema_warmup_steps: 10`
+# gives `(1 + n) / (10 + n)`, which reaches the 0.9999 cap near 90k updates, so
+# the effective decay climbs through 0.999 at ~9k updates (~14 epochs) and ends
+# a 100 epoch run around 0.99986 (window ~7k steps, ~11 epochs).
+# If the early FID curve lags the old runs' because of the slower EMA, lower
+# `training.ema_decay` to 0.9995 (window ~2k steps).
+#
+# Everything else is as in latent_celeba_f8c16_res4, so the EMA is the only
+# change. FID uses the deterministic sampler (`eta` 0) so the curve stays
+# comparable to the earlier runs; score the final checkpoint with
+#   diffusion-models fid <final.pt> --samples 5000 --no-clip --eta 1.0
+# as well, since stochastic sampling lowered the FID by ~10 points.
+defaults:
+  - latent_celeba_f8c16_res4
+  - _self_
+
+training:
+  training_name: latent_celeba_f8c16_res4_ema
+  ema_decay: 0.9999
+  ema_warmup_steps: 10

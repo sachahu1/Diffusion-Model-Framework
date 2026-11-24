@@ -1,0 +1,38 @@
+# @package _global_
+# Latent diffusion on the 4-channel, 32x32 latents of the f4c4 pipeline
+# (conf/pipeline/latent_celeba_f4c4.yaml): the diffuser stage of that pipeline as
+# a standalone config, with the same settings. The paths come from a pipeline run:
+#   diffusion-models train diffuser +config=latent_celeba_f4c4 \
+#     source_run=runs/latent_celeba_f4c4/<timestamp>
+defaults:
+  - latent_celeba_attn3
+  - _self_
+
+source_run: ???  # a pipeline run directory, holding encode/ and gan/
+decoder_checkpoint: final.pt  # the decoder, a file of <source_run>/gan/checkpoints/
+
+image_size: 32
+image_channels: 4
+
+dataset:
+  path: ${source_run}/encode/latents.pt
+
+autoencoder:
+  checkpoint: ${source_run}/gan/checkpoints/${decoder_checkpoint}
+
+diffuser:
+  prediction_type: Epsilon
+  mode: Quadratic
+  number_of_steps: 50
+
+training:
+  training_name: latent_celeba_f4c4
+  batch_size: 128  # 256 OOMs an 8 GB GPU on a 32x32 latent
+  number_of_epochs: 40
+  ema_decay: 0.9999
+  ema_warmup_steps: 10
+
+evaluation:
+  # Decoding 100 latents at 128 px needs a 1.56 GiB buffer, which OOMed the
+  # first FID evaluation on an 8 GB GPU.
+  batch_size: 25
