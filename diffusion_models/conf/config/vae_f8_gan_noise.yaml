@@ -1,0 +1,28 @@
+# @package _global_
+# Continues the GAN fine-tune of the decoder with noise on its input latents, so
+# it tolerates the imperfect latents a diffusion model samples. The encoder
+# stays frozen: the latent cache and the diffusion checkpoints remain valid and
+# only the decoder is swapped. Launch with:
+#   diffusion-models train autoencoder +config=vae_f8_gan_noise \
+#     autoencoder.checkpoint=<run>/gan/checkpoints/<epoch>.pt
+# The default checkpoint below belongs to an older run: always override it with
+# the decoder whose latent cache the diffusion model trains on.
+defaults:
+  - vae_f8_gan
+  - _self_
+
+autoencoder:
+  checkpoint: runs/vae_f8_gan/2026-11-18_19-51-26/checkpoints/final.pt
+
+adversarial:
+  # Noise std is U[0, 0.3] x the channel std, per image. With a near
+  # deterministic posterior (std ~0.005), 0.1x white noise took the
+  # reconstruction FID of the f8c16 decoder from 8.5 to 36. Making the decoder
+  # robust to such noise did NOT fix the diffusion FID, though (decoder with
+  # latent_noise=0.5: 37.3 -> 36.5 on the same samples), so the diffusion
+  # model's latent errors are not white-noise-like.
+  latent_noise: 0.3
+
+training:
+  training_name: vae_f8_gan_noise
+  number_of_epochs: 10

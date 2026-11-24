@@ -1,0 +1,15 @@
+# @package _global_
+# A small f8 VAE (128x128 images -> 4x16x16 latents), bf16 + channels_last +
+# torch.compile. Launch with:
+#   diffusion-models train autoencoder +config=vae_f8
+# The class defaults (base_channels=64, num_res_blocks=2, 21M parameters) are
+# ~3x slower on an 8 GB laptop GPU; try them with
+#   autoencoder.base_channels=64 autoencoder.num_res_blocks=2
+autoencoder:
+  base_channels: 32
+  num_res_blocks: 1  # 3.9M parameters
+
+training:
+  training_name: vae_f8
+  channels_last: true
+  compile: true

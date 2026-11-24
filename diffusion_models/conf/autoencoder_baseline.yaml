@@ -1,0 +1,73 @@
+# The standard autoencoder training configuration (see `diffusion-models
+# train autoencoder --help`). Override like the diffusion one, e.g.
+#   diffusion-models train autoencoder training.batch_size=16 image_size=64
+# Presets from conf/config/ are applied with `+config=<name>`.
+defaults:
+  - autoencoder: conv_vae
+  - optimizer: adamw
+  - loss: vae  # reconstruction + KL, see core/losses
+  - dataset: celeba
+  - eval_dataset: celeba_valid  # validation images and the reconstruction grid
+  # Last, so the values below override those of the groups above.
+  - _self_
+
+seed: 0
+device: cuda
+# A checkpoint (e.g. runs/<name>/<timestamp>/checkpoints/latest.pt) to resume from.
+resume_from: null
+image_size: 128
+image_channels: 3
+eval_image_size: ${image_size}
+eval_image_channels: ${image_channels}
+
+optimizer:
+  lr: 1.0e-4
+
+training:
+  _target_: diffusion_models.core.schemas.TrainingConfiguration
+  training_name: autoencoder
+  batch_size: 32
+  learning_rate: ${optimizer.lr}
+  number_of_epochs: 50
+  checkpoint_rate: 10
+  latest_checkpoint_rate: 1
+  mixed_precision_training: true
+  mixed_precision_dtype: bfloat16
+  channels_last: false
+  gradient_clip: 1.0
+  lr_schedule: null  # null (constant), cosine or linear
+  lr_warmup_steps: 0
+  lr_min_ratio: 0.0  # the final rate as a fraction of the learning rate
+  lr_schedule_start_epoch: 0  # decay a finished run: the epoch of its checkpoint
+  ema_decay: 0.999
+  ema_warmup_steps: 1000
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  compile: false
+
+loss:
+  kl_weight: 1.0e-6  # tiny: keeps the latent scale bounded without blurring
+  reconstruction_loss: l1  # l1, mse or huber
+
+logging:
+  _target_: diffusion_models.core.schemas.LogConfiguration
+  log_rate: 50  # steps
+  image_rate: 1000  # steps between reconstruction grids
+  number_of_images: 8
+
+validation:
+  _target_: diffusion_models.autoencoders.schemas.ValidationConfiguration
+  rate: 1  # epochs; null disables
+  number_of_samples: 2000
+  batch_size: 64
+  num_workers: 2
+  fid_rate: null  # epochs between reconstruction FIDs (Val/FID); null disables
+  fid_samples: 2000
+
+hydra:
+  run:
+    dir: runs/${training.training_name}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: runs/${training.training_name}/multirun/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.num}
