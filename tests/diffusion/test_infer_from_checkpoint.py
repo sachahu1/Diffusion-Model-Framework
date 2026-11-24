@@ -195,26 +195,42 @@ def test_inference_does_not_load_the_optimizer_state(tmp_path):
   assert light.completed_epochs == full.completed_epochs
 
 
-def test_stepwise_generator_samples_with_the_diffusers_eta():
+def _last_frame(eta_on_diffuser, eta_argument=None):
   from diffusion_models.diffusion.diffusion_inference import (
     DiffusionInference,
   )
 
-  def last_frame(eta):
-    model = _model().eval()
-    torch.manual_seed(0)
-    model.load_state_dict(_model().state_dict())
-    model.diffuser.eta = eta
-    inference = DiffusionInference(
-      model=model,
-      image_shape=(3, 8),
-      device="cpu",
-      reverse_transforms=lambda x: x,
-    )
-    torch.manual_seed(1)
-    return [
-      torch.tensor(list(frame.getdata()))
-      for frame in inference.get_generator(2)
-    ][-1]
+  torch.manual_seed(0)  # the same weights on every call
+  model = _model().eval()
+  model.diffuser.eta = eta_on_diffuser
+  inference = DiffusionInference(
+    model=model,
+    image_shape=(3, 8),
+    device="cpu",
+    reverse_transforms=lambda x: x,
+  )
+  torch.manual_seed(1)
+  frames = list(inference.get_generator(2, eta=eta_argument))
+  return torch.tensor(list(frames[-1].getdata()))
 
-  assert not torch.equal(last_frame(0.0), last_frame(1.0))
+
+def test_stepwise_generator_samples_with_the_diffusers_eta():
+  assert not torch.equal(_last_frame(0.0), _last_frame(1.0))
+
+
+def test_stepwise_generator_eta_argument_overrides_the_diffusers():
+  assert torch.equal(_last_frame(0.0, eta_argument=1.0), _last_frame(1.0))
+  assert not torch.equal(_last_frame(1.0, eta_argument=0.0), _last_frame(1.0))
+
+
+def test_gaussian_diffuser_refuses_an_eta():
+  from diffusion_models.diffusion.diffusers.gaussian_diffuser import (
+    GaussianDiffuser,
+  )
+
+  diffuser = GaussianDiffuser(LinearBetaScheduler())
+  timestep = diffuser.get_timestep(1, diffuser.steps[0])
+  with pytest.raises(ValueError, match="no eta"):
+    diffuser._denoise_step(
+      torch.zeros(1, 3, 8, 8), _model(), timestep, eta=1.0
+    )
