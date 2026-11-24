@@ -439,7 +439,7 @@ wheels = [
 
 [[package]]
 name = "diffusion-model-framework"
-version = "1.2.0rc2"
+version = "1.2.0rc3"
 source = { editable = "." }
 default-groups = []
 dependencies = [
