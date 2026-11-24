@@ -289,7 +289,9 @@ def infer(config_directories: Tuple[pathlib.Path, ...], overrides) -> None:
     from diffusion_models.diffusion.schemas import Checkpoint
 
     checkpoint = options["checkpoint"]
-    if Checkpoint.from_file(checkpoint, map_location="cpu").config_yaml:
+    if Checkpoint.from_file(
+      checkpoint, map_location="cpu", load_optimizer=False
+    ).config_yaml:
       output = pathlib.Path("outputs/infer") / datetime.now().strftime(
         "%Y-%m-%d_%H-%M-%S"
       )

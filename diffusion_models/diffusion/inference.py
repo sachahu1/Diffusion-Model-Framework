@@ -54,7 +54,10 @@ def infer(
   if output_directory is None:
     output_directory = pathlib.Path(HydraConfig.get().runtime.output_dir)
 
-  weights = Checkpoint.from_file(checkpoint, map_location=device)
+  # Skip the optimizer state and keep the file on the CPU.
+  weights = Checkpoint.from_file(
+    checkpoint, map_location="cpu", load_optimizer=False
+  )
   model.load_state_dict(weights.get_model_state_dict(use_ema=use_ema))
   model = model.to(device).eval()
   if steps is not None:
@@ -142,7 +145,9 @@ def generate_from_checkpoint(
     ValueError: If the checkpoint has no embedded config, or the diffuser has
       no ``eta`` to override.
   """
-  weights = Checkpoint.from_file(str(checkpoint), map_location="cpu")
+  weights = Checkpoint.from_file(
+    str(checkpoint), map_location="cpu", load_optimizer=False
+  )
   if weights.config_yaml is None:
     raise ValueError(
       "The checkpoint has no embedded config, so the model cannot be rebuilt: "
@@ -157,7 +162,9 @@ def generate_from_checkpoint(
     model.diffuser.eta = eta
   autoencoder = None
   if weights.latent_scale_factor is not None:
-    if configuration.get("autoencoder") is None:  # ty: ignore[invalid-argument-type]
+    if (
+      configuration.get("autoencoder") is None  # ty: ignore[invalid-argument-type]
+    ):
       raise ValueError("A latent checkpoint's config needs an autoencoder.")
     autoencoder = instantiate(configuration.autoencoder)
   if seed is not None:
@@ -198,14 +205,18 @@ def generate_from_checkpoint(
       device=device,
       image_size=configuration.image_size,
       image_channels=configuration.image_channels,
-      reverse_image_size=configuration.get("reverse_image_size")  # ty: ignore[invalid-argument-type]
+      reverse_image_size=configuration.get(
+        "reverse_image_size"  # ty: ignore[invalid-argument-type]
+      )
       or configuration.image_size,
       number_of_images=number_of_images,
       use_ema=use_ema,
       save_gif=save_gif,
       steps=steps,
       autoencoder=autoencoder,
-      eval_image_channels=configuration.get("eval_image_channels", 3),  # ty: ignore[invalid-argument-type]
+      eval_image_channels=configuration.get(
+        "eval_image_channels", 3  # ty: ignore[invalid-argument-type]
+      ),
       output_directory=output_directory,
     )
     logging.info(f"Saved the images to {output_directory}.")

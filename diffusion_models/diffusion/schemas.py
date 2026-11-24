@@ -95,20 +95,34 @@ class Checkpoint:
 
   @classmethod
   def from_file(
-    cls, file_path: str, map_location: Optional[str] = None
+    cls,
+    file_path: str,
+    map_location: Optional[str] = None,
+    load_optimizer: bool = True,
   ) -> "Checkpoint":
     """Load and instantiate a checkpoint from a file.
 
     Args:
       file_path: The path to the checkpoint file.
       map_location: A function, torch. device, string or a dict specifying how to remap storage location.
+      load_optimizer: Keep the optimizer and gradient scaler states. They are
+        only needed to resume training and are about twice the size of the
+        weights, so inference passes ``False``: the file is then memory
+        mapped and those tensors are never read, and ``optimizer_state_dict``
+        is left empty.
 
     Returns:
       A checkpoint instance.
     """
     checkpoint = torch.load(
-      f=file_path, weights_only=True, map_location=map_location
+      f=file_path,
+      weights_only=True,
+      map_location=map_location,
+      mmap=not load_optimizer,
     )
+    if not load_optimizer:
+      checkpoint["optimizer_state_dict"] = {}
+      checkpoint["scaler"] = None
     checkpoint = cls(**checkpoint)
     beta_scheduler_config = BetaSchedulerConfiguration(
       **checkpoint.beta_scheduler_config  # ty: ignore[invalid-argument-type]
