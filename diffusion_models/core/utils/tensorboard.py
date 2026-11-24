@@ -1,0 +1,103 @@
+import pathlib
+from typing import Dict
+from typing import Optional
+from typing import Union
+
+import torch
+from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid
+
+
+class TensorboardManager:
+  def __init__(
+    self,
+    log_name: Optional[str] = None,
+    log_directory: Optional[Union[str, pathlib.Path]] = None,
+  ):
+    """A tensorboard manager for simplified tensorboard logging.
+
+    Args:
+      log_name: The name of the tensorboard log run.
+      log_directory: An explicit directory to write logs to. When provided,
+        it takes precedence over ``log_name``.
+    """
+    if log_directory is not None:
+      self.log_directory = str(log_directory)
+    else:
+      if log_name is None:
+        log_name = "fill this"  ##########
+      self.log_directory = f"../runs/{log_name}"
+    """The directory where tensorboard logs are saved."""
+    self.summary_writer = SummaryWriter(log_dir=self.log_directory)
+    """The tensorboard summary writer."""
+
+  def log_metrics(self, metrics: Dict[str, float], global_step: int):
+    """Log metrics to tensorboard.
+
+    Args:
+      metrics: A dictionary mapping metric names to values.
+      global_step: The step at which the metrics are recorded.
+    """
+    for metric_name, value in metrics.items():
+      self.summary_writer.add_scalar(
+        metric_name, value, global_step=global_step
+      )
+
+  def log_images(self, tag: str, images: torch.Tensor, timestep: int):
+    """Log images to tensorboard.
+
+    Args:
+      tag: The name to give the images in tensorboard.
+      images: A tensor representing the images to log.
+      timestep: The timestep at which the images are produced.
+
+    """
+    self.summary_writer.add_images(
+      tag=tag, img_tensor=images, global_step=timestep
+    )
+
+  def log_image_grid(
+    self,
+    tag: str,
+    images: torch.Tensor,
+    global_step: int,
+    columns: Optional[int] = None,
+  ):
+    """Log a batch of images as one grid, a point on the tag's slider.
+
+    Always log a given kind of image under the *same* tag: tensorboard shows
+    one tab per tag, with a slider over the steps. A tag per step (or epoch)
+    scatters the images over dozens of collapsed tabs.
+
+    Args:
+      tag: The name of the image series.
+      images: A ``(N, C, H, W)`` batch.
+      global_step: The step (or epoch) on the tag's slider.
+      columns: Images per row; defaults to one row.
+    """
+    grid = make_grid(
+      images.detach().float().cpu(), nrow=columns or len(images), padding=2
+    )
+    self.summary_writer.add_image(tag, grid, global_step=global_step)
+
+  def log_text(self, tag: str, text: str, global_step: int = 0):
+    """Log text to tensorboard.
+
+    Args:
+      tag: The name to give the text in tensorboard.
+      text: The text to log (rendered as markdown by tensorboard).
+      global_step: The step at which the text is recorded.
+    """
+    self.summary_writer.add_text(tag, text, global_step=global_step)
+
+  def log_weights(self, model: torch.nn.Module, global_step: int):
+    """Log a histogram of every model parameter to tensorboard.
+
+    Args:
+      model: The model whose parameters are logged.
+      global_step: The step at which the weights are recorded.
+    """
+    for name, parameter in model.named_parameters():
+      self.summary_writer.add_histogram(
+        f"Weights/{name}", parameter.detach().float(), global_step=global_step
+      )

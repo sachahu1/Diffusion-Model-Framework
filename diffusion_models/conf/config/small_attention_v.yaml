@@ -4,7 +4,7 @@
 # well-conditioned at the zero-terminal-SNR end of the schedule, and sampling
 # uses trailing timestep spacing so the last step is pure noise (t = 999).
 # Launch with:
-#   diffusion-models train +config=small_attention_v
+#   diffusion-models train diffuser +config=small_attention_v
 defaults:
   - small_attention_ema
   - override /diffuser: ddim

@@ -1,0 +1,21 @@
+# @package _global_
+# latent_celeba with self-attention at the lowest three levels (8x8, 4x4 and 2x2
+# of the 16x16 latent) instead of the lowest two, to improve the global face
+# structure of the samples. Launch with:
+#   diffusion-models train diffuser +config=latent_celeba_attn3
+defaults:
+  - latent_celeba
+  - _self_
+
+dataset:
+  path: data/latents/celeba_vae_f8_gan.pt  # from `diffusion-models encode`
+
+autoencoder:
+  checkpoint: runs/vae_f8_gan/2026-11-18_19-51-26/checkpoints/final.pt
+
+model:
+  attention_levels: 3
+
+training:
+  training_name: latent_celeba_attn3
+  number_of_epochs: 100  # the FID of latent_celeba was flat from epoch 100

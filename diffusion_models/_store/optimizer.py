@@ -1,13 +1,11 @@
 from hydra_zen import builds, store
 from torch.optim import AdamW
 
-from diffusion_models.utils.adopt import ADOPT
+from diffusion_models.core.utils.adopt import ADOPT
 
 optimizer_store = store(group="optimizer")
 
-# Partials: the model parameters are only known at runtime.
-# ``hydra_convert="all"`` yields plain tuples/lists instead of OmegaConf
-# containers, keeping optimizer state loadable with ``weights_only=True``.
+# Plain containers keep optimizer state loadable with ``weights_only=True``.
 optimizer_store(
   builds(
     AdamW,

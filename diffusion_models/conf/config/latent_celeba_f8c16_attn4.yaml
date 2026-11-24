@@ -1,0 +1,22 @@
+# @package _global_
+# latent_celeba_f8c16 (baseline size, 2 residual blocks per level) with self
+# attention at every UNet level, including the full 16x16 latent resolution
+# (256 tokens), where the baseline has none: `attention_levels: 4` instead of 3.
+# Launch with the paths of a pipeline run:
+#   diffusion-models train diffuser +config=latent_celeba_f8c16_attn4 \
+#     source_run=runs/latent_celeba_f8c16_kl/<timestamp>
+#
+# Why: generated faces keep distorted eyes and mouths, which are resolved at the
+# finest latent level, where the model only has convolutions. Compare its FID
+# curve with the same-size run without that attention (KL run: FID 63 / 56 / 54
+# at epochs 30 / 40 / 50, deterministic sampler). Nothing else differs, EMA
+# settings included, so the comparison stays clean.
+defaults:
+  - latent_celeba_f8c16
+  - _self_
+
+model:
+  attention_levels: 4
+
+training:
+  training_name: latent_celeba_f8c16_attn4

@@ -1,0 +1,95 @@
+# @package _global_
+# A latent diffusion model on CelebA 128px with a more structured latent space.
+# One command trains the four stages in order:
+#   diffusion-models train pipeline +pipeline=latent_celeba_f8c16
+#   diffusion-models train pipeline +pipeline=latent_celeba_f8c16 --dry-run
+#
+# Why: the 4-channel f8 VAE of `latent_celeba_attn3` had a posterior std of 2e-4
+# against a latent std of 1-2. The KL weight of 1e-6 left it a deterministic
+# autoencoder that packs 8x8x3 pixels into 4 numbers; the diffusion model's small
+# errors then showed up as malformed eyes and mouths. This pipeline changes
+#   - latent_channels 4 -> 16: 12x compression instead of 48x (SD3/Flux scale);
+#   - kl_weight 1e-6 -> 1e-3: the KL term is normalised by the pixel count, so
+#     1e-6 contributed ~2e-7 to a loss of ~0.04. 1e-3 is a few percent of the
+#     reconstruction loss, enough for the posterior to keep a real std. This is a
+#     starting point, not tuned: after the vae stage, `Val/FID` (rFID) must not
+#     have regressed much, and the `encode` stage prints the mean posterior std
+#     (aim for ~0.05-0.3 of the latent std). Lower it if the reconstructions
+#     blur, raise it if the diffusion samples keep their artifacts;
+# The diffuser stage keeps epsilon prediction with Quadratic spacing, like
+# `latent_celeba_attn3`, so the latent space is the main difference from that run.
+# To try v-prediction later, set `stages.diffuser.config.diffuser.prediction_type=V`
+# and `mode=Trailing` (epsilon with zero terminal SNR is a known mismatch).
+# The decoder is not trained with extra latent noise: with a real posterior std,
+# the GAN stage already decodes sampled latents.
+#
+# For 32 channels: `latent_channels=32`. For an f4 latent (32x32 spatial)
+# instead, add `+stages.vae.config.autoencoder.channel_multipliers=[1,2,4]`
+# and `+stages.diffuser.config.image_size=32` (new keys need the `+`; the
+# diffusion model then costs ~4x more per epoch).
+name: latent_celeba_f8c16
+
+# Shared values, read by the stages as ${pipeline.<name>}.
+latent_channels: 16
+kl_weight: 1.0e-3
+
+stages:
+  # 1. The VAE (~10 min per epoch on an RTX 3080 laptop). The 4-channel run was
+  # stopped at epoch 12 with the PSNR still rising ~0.1 dB per epoch, after most of
+  # the gain came in the first 5: 15 epochs is a bit more than that run, not 30.
+  vae:
+    task: autoencoder
+    preset: vae_f8
+    config:
+      autoencoder:
+        latent_channels: ${pipeline.latent_channels}
+      loss:
+        kl_weight: ${pipeline.kl_weight}
+      training:
+        training_name: vae_f8c16
+        number_of_epochs: 15
+      validation:
+        fid_rate: 5  # follow the reconstruction FID, PSNR rewards blur
+
+  # 2. Fine-tunes the decoder against a PatchGAN to sharpen the reconstructions.
+  # The encoder is frozen, so the latents of the vae stage stay valid.
+  gan:
+    task: autoencoder
+    preset: vae_f8_gan
+    config:
+      autoencoder:
+        checkpoint: ${pipeline.stages.vae.dir}/checkpoints/final.pt
+      # The first run's discriminator ran away after ~1 epoch (fake logit -3.5,
+      # D loss 0.05, FID 11.5 -> 14.2), so it gets the decoder's learning rate
+      # instead of 4x, and the stage is short and keeps every epoch.
+      discriminator_optimizer:
+        lr: 5.0e-5
+      training:
+        training_name: vae_f8c16_gan
+        number_of_epochs: 3
+        checkpoint_rate: 1
+
+  # 3. Encodes CelebA once, so the diffusion model never runs the encoder.
+  encode:
+    task: encode
+    config:
+      checkpoint: ${pipeline.stages.gan.dir}/checkpoints/final.pt
+      flip: true
+
+  # 4. The diffusion model, on the cached latents.
+  diffuser:
+    task: diffuser
+    preset: latent_celeba_attn3
+    config:
+      image_channels: ${pipeline.latent_channels}
+      dataset:
+        path: ${pipeline.stages.encode.dir}/latents.pt
+      autoencoder:
+        checkpoint: ${pipeline.stages.gan.dir}/checkpoints/final.pt
+      diffuser:
+        prediction_type: Epsilon
+        mode: Quadratic
+        number_of_steps: 50
+      training:
+        training_name: latent_celeba_f8c16
+        number_of_epochs: 100

@@ -1,0 +1,28 @@
+# @package _global_
+# Continues a latent_celeba_f4c4 diffusion run with the learning rate decaying
+# (cosine) from 2e-4 to zero. The constant-rate run's FID went 25.8, 22.5, 39.0
+# at epochs 20, 30, 40 (raw weights 44.4 at 40), so this restarts from the epoch 30
+# checkpoint (31 completed epochs) and decays over epochs 32 to 40. Launch with:
+#   diffusion-models train diffuser +config=latent_celeba_f4c4_decay \
+#     source_run=runs/latent_celeba_f4c4/<timestamp>
+# The result is in runs/latent_celeba_f4c4_decay/<timestamp>/, and its FID is
+# computed at epochs 35 and 40. To resume another checkpoint of the run, set
+# `source_checkpoint=<file of <source_run>/diffuser/checkpoints/>` and
+# `training.lr_schedule_start_epoch` to its number of completed epochs.
+defaults:
+  - latent_celeba_f4c4
+  - _self_
+
+source_checkpoint: epoch_30.pt  # 31 completed epochs
+
+resume_from: ${source_run}/diffuser/checkpoints/${source_checkpoint}
+
+training:
+  training_name: latent_celeba_f4c4_decay
+  number_of_epochs: 40
+  lr_schedule: cosine
+  lr_schedule_start_epoch: 31
+  checkpoint_rate: 5
+
+evaluation:
+  fid_rate: 5

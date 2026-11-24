@@ -1,0 +1,28 @@
+# @package _global_
+# Latent diffusion on the 16-channel latents of the f8c16 pipeline
+# (conf/pipeline/latent_celeba_f8c16.yaml): attention at the lowest three
+# levels, epsilon prediction, 50 DDIM steps. The paths come from a pipeline run:
+#   diffusion-models train diffuser +config=latent_celeba_f8c16 \
+#     source_run=runs/latent_celeba_f8c16/<timestamp> decoder_checkpoint=epoch_1.pt
+defaults:
+  - latent_celeba_attn3
+  - _self_
+
+source_run: ???  # a pipeline run directory, holding encode/ and gan/
+decoder_checkpoint: final.pt  # the decoder, a file of <source_run>/gan/checkpoints/
+
+image_channels: 16
+
+dataset:
+  path: ${source_run}/encode/latents.pt
+
+autoencoder:
+  checkpoint: ${source_run}/gan/checkpoints/${decoder_checkpoint}
+
+diffuser:
+  prediction_type: Epsilon
+  mode: Quadratic
+  number_of_steps: 50
+
+training:
+  training_name: latent_celeba_f8c16

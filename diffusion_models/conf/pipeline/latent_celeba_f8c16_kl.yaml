@@ -1,0 +1,78 @@
+# @package _global_
+# `latent_celeba_f8c16` with a 10x larger KL weight. Launch with:
+#   diffusion-models train pipeline +pipeline=latent_celeba_f8c16_kl
+#   diffusion-models train pipeline +pipeline=latent_celeba_f8c16_kl --dry-run
+#
+# Why: with kl_weight 1e-3 the posterior std came out at ~0.005 against latent
+# channel stds of 0.5-1.7 (KL ~5.5 nats per latent value), i.e. a deterministic
+# autoencoder. Its decoder reached rFID 8.5 but fell apart under white latent
+# noise of 0.1x the channel std (FID 36). Training the decoder to tolerate that
+# noise did not help the diffusion samples, though (FID 37.3 -> 36.5), so this
+# pipeline is an experiment, not a known fix: it asks whether a latent space
+# with a real posterior std (smoother, less detail packed into precise values)
+# is easier for the diffusion model to sample.
+#   - kl_weight 1e-3 -> 1e-2: the KL term was ~2% of the loss (4.6e-4 against a
+#     reconstruction loss of ~0.023); 1e-2 makes it ~20%. A starting point, not
+#     tuned. The `encode` stage prints the mean posterior std: aim for
+#     ~0.05-0.3 of the latent std. If it is still ~0.01, raise kl_weight again
+#     (3e-2); if the rFID (`Val/FID`) regresses far above ~12, lower it.
+# Everything else is as in `latent_celeba_f8c16`, so the KL weight is the only
+# change. To also train the decoder on noisy latents, add to the gan stage
+# `config.adversarial.latent_noise: 0.3`.
+#
+# Run it next to the first pipeline: it writes to its own directory.
+name: latent_celeba_f8c16_kl
+
+latent_channels: 16
+kl_weight: 1.0e-2
+
+stages:
+  vae:
+    task: autoencoder
+    preset: vae_f8
+    config:
+      autoencoder:
+        latent_channels: ${pipeline.latent_channels}
+      loss:
+        kl_weight: ${pipeline.kl_weight}
+      training:
+        training_name: vae_f8c16_kl
+        number_of_epochs: 15
+      validation:
+        fid_rate: 5  # follow the reconstruction FID, PSNR rewards blur
+
+  gan:
+    task: autoencoder
+    preset: vae_f8_gan
+    config:
+      autoencoder:
+        checkpoint: ${pipeline.stages.vae.dir}/checkpoints/final.pt
+      discriminator_optimizer:
+        lr: 5.0e-5
+      training:
+        training_name: vae_f8c16_kl_gan
+        number_of_epochs: 3
+        checkpoint_rate: 1
+
+  encode:
+    task: encode
+    config:
+      checkpoint: ${pipeline.stages.gan.dir}/checkpoints/final.pt
+      flip: true
+
+  diffuser:
+    task: diffuser
+    preset: latent_celeba_attn3
+    config:
+      image_channels: ${pipeline.latent_channels}
+      dataset:
+        path: ${pipeline.stages.encode.dir}/latents.pt
+      autoencoder:
+        checkpoint: ${pipeline.stages.gan.dir}/checkpoints/final.pt
+      diffuser:
+        prediction_type: Epsilon
+        mode: Quadratic
+        number_of_steps: 50
+      training:
+        training_name: latent_celeba_f8c16_kl
+        number_of_epochs: 100

@@ -17,6 +17,17 @@ ImageTransforms = builds(
   ],
 )
 
+# FID reference images can differ in size from the (latent) training data.
+EvalImageTransforms = builds(
+  v2.Compose,
+  transforms=[
+    builds(v2.ToImage),
+    builds(v2.Resize, size=["${eval_image_size}", "${eval_image_size}"]),
+    builds(v2.ToDtype, dtype=builds(torch.get_default_dtype), scale=True),
+    builds(v2.Normalize, mean=[0.5] * 3, std=[0.5] * 3),
+  ],
+)
+
 dataset_store(
   builds(
     datasets.CelebA,
@@ -47,7 +58,7 @@ eval_dataset_store(
     root="data",
     download=False,
     split="valid",
-    transform=ImageTransforms,
+    transform=EvalImageTransforms,
   ),
   name="celeba_valid",
 )
@@ -55,8 +66,12 @@ eval_dataset_store(
   builds(
     datasets.FakeData,
     size=64,
-    image_size=["${image_channels}", "${image_size}", "${image_size}"],
-    transform=ImageTransforms,
+    image_size=[
+      "${eval_image_channels}",
+      "${eval_image_size}",
+      "${eval_image_size}",
+    ],
+    transform=EvalImageTransforms,
     random_offset=1,
     populate_full_signature=True,
   ),

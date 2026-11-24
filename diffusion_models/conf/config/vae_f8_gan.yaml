@@ -1,0 +1,46 @@
+# @package _global_
+# Fine-tunes the decoder of a trained autoencoder against a PatchGAN
+# discriminator, to sharpen its reconstructions. The encoder is frozen, so the
+# latents of the first stage stay valid. Launch with:
+#   diffusion-models train autoencoder +config=vae_f8_gan \
+#     autoencoder.checkpoint=runs/vae_f8/<timestamp>/checkpoints/latest.pt
+# The first stage is rebuilt from its checkpoint (BaseAutoencoder.load); the
+# optimizer, the epoch counter and the discriminator start fresh. Use
+# `resume_from=` to resume this stage itself.
+defaults:
+  - /discriminator: patch
+  - /optimizer@discriminator_optimizer: adamw
+  - override /autoencoder: pretrained  # overrides come last
+
+autoencoder:
+  use_ema: true  # start from the EMA weights of the first stage
+
+# The decoder out-adapts the discriminator when the adversarial term pushes it
+# hard (weight 0.5 collapsed the discriminator within ~1000 steps, whatever its
+# learning rate or size). A low weight keeps the discriminator in the game, and
+# it first trains alone for `start_step` steps. Watch Adversarial/Discriminator:
+# a healthy value is ~0.5-0.85; sustained above ~0.95, lower the weight.
+adversarial:
+  _target_: diffusion_models.autoencoders.schemas.AdversarialConfiguration
+  weight: 0.1
+  start_step: 500
+  warmup_steps: 1000
+  adaptive: true
+  trainable: decoder
+
+optimizer:
+  lr: 5.0e-5
+  betas: [0.5, 0.9]
+
+discriminator_optimizer:
+  lr: 2.0e-4  # 4x the decoder's, so the discriminator keeps up
+  betas: [0.5, 0.9]
+
+training:
+  training_name: vae_f8_gan
+  number_of_epochs: 8
+  channels_last: true
+  compile: true
+
+validation:
+  fid_rate: 1  # PSNR rewards blur, so follow the reconstruction FID (Val/FID)

@@ -1,0 +1,103 @@
+# @package _global_
+# A latent diffusion pipeline on CelebA 128px with an image-like latent: f4
+# instead of f8, so the latent is 4 x 32 x 32 instead of 16 x 16 x 16. Launch:
+#   diffusion-models train pipeline +pipeline=latent_celeba_f4c4
+#   diffusion-models train pipeline +pipeline=latent_celeba_f4c4 --dry-run
+#
+# Why: the original LDM recipe for CelebA-HQ uses a mild f=4 autoencoder with 3
+# channels (a 64x64x3 latent for 256px images), so every latent pixel is a 4x4
+# patch and the latent still looks like a small image. Ours packs each 8x8 patch
+# into 16 numbers on a 16x16 grid. Both hold about the same number of values
+# (4096 here and in the f8c16 latent, a 12x compression), so this changes the
+# layout (4x more positions, 4x fewer channels) and not the information budget.
+# The f8c16 runs gave a deterministic FID of ~38-45 against reconstruction FIDs
+# of 6.6-8.5, and a 7x stronger KL did not change that (experiment 26), which
+# points at the latent's layout or the denoiser, not at the posterior noise.
+#
+# What is kept from the f8c16 runs, so the layout is the main change:
+#   - kl_weight 1e-3 (the stronger KL did not help generation);
+#   - the vae / gan / encode stages, epsilon prediction, quadratic 50 steps;
+#   - evaluate with `diffusion-models fid <final.pt> --no-clip --eta 1.0` as
+#     well as the default: stochastic sampling lowered the f8c16 FID by ~10.
+# What is changed besides the layout:
+#   - the EMA warm-up is fixed (`ema_warmup_steps: 10`, decay 0.9999), see
+#     `config/latent_celeba_f8c16_res4_ema.yaml`.
+#
+# Unmeasured costs, to check on the first epochs and adjust:
+#   - the vae and gan stages run the convolutions at 128 and 64 pixels, so they
+#     should be slower per epoch than the f8 ones (~10 min per epoch);
+#   - the diffusion UNet sees 4x more positions, so an epoch should cost several
+#     times the f8c16 ones (~3.3 min at baseline size). `number_of_epochs: 40`
+#     below is a first pass for that reason; the f8c16 curve was still falling at
+#     40 (FID 56), so compare curves at equal epochs, not final scores.
+# Attention: `attention_levels: 3` puts attention at 16x16, 8x8 and 4x4 of the
+# 32x32 latent (like the LDM CelebA config, which has none at its finest level).
+# If the `attention_levels=4` test on the f8c16 latent helps, try 4 here too
+# (1024 tokens at the finest level, so expect it to be slower).
+name: latent_celeba_f4c4
+
+latent_channels: 4
+kl_weight: 1.0e-3
+latent_size: 32
+
+stages:
+  vae:
+    task: autoencoder
+    preset: vae_f8
+    config:
+      autoencoder:
+        latent_channels: ${pipeline.latent_channels}
+        channel_multipliers: [1, 2, 4]  # two downsamplings: f4
+      loss:
+        kl_weight: ${pipeline.kl_weight}
+      training:
+        training_name: vae_f4c4
+        number_of_epochs: 15
+      validation:
+        fid_rate: 5  # follow the reconstruction FID, PSNR rewards blur
+
+  gan:
+    task: autoencoder
+    preset: vae_f8_gan
+    config:
+      autoencoder:
+        checkpoint: ${pipeline.stages.vae.dir}/checkpoints/final.pt
+      discriminator_optimizer:
+        lr: 5.0e-5
+      training:
+        training_name: vae_f4c4_gan
+        number_of_epochs: 8
+        checkpoint_rate: 1
+
+  encode:
+    task: encode
+    config:
+      checkpoint: ${pipeline.stages.gan.dir}/checkpoints/final.pt
+      flip: true
+      # The f4 encoder runs at 128 px with full width; 128 images OOM an 8 GB GPU.
+      batch_size: 32
+
+  diffuser:
+    task: diffuser
+    preset: latent_celeba_attn3
+    config:
+      image_size: ${pipeline.latent_size}
+      image_channels: ${pipeline.latent_channels}
+      dataset:
+        path: ${pipeline.stages.encode.dir}/latents.pt
+      autoencoder:
+        checkpoint: ${pipeline.stages.gan.dir}/checkpoints/final.pt
+      diffuser:
+        prediction_type: Epsilon
+        mode: Quadratic
+        number_of_steps: 50
+      training:
+        training_name: latent_celeba_f4c4
+        batch_size: 128  # 256 OOMs an 8 GB GPU on a 32x32 latent
+        number_of_epochs: 40
+        ema_decay: 0.9999
+        ema_warmup_steps: 10
+      evaluation:
+        # Decoding 100 latents at 128 px needs a 1.56 GiB buffer, which OOMed the
+        # first FID evaluation on an 8 GB GPU.
+        batch_size: 25

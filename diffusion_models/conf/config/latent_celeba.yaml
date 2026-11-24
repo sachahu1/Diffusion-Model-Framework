@@ -1,0 +1,46 @@
+# @package _global_
+# Latent diffusion on the cached latents of a VAE (128px images -> 4x16x16
+# latents), scored with FID on decoded samples. Launch with:
+#   diffusion-models encode <autoencoder checkpoint> -o latents.pt
+#   diffusion-models train diffuser +config=latent_celeba dataset.path=latents.pt \
+#     autoencoder.checkpoint=<autoencoder checkpoint>
+defaults:
+  - /autoencoder: pretrained  # decodes samples; overrides come last
+  - override /model: small_attention_unet
+  - override /dataset: latents
+  - override /eval_dataset: celeba_valid
+
+image_size: 16  # the latent's size and channels
+image_channels: 4
+eval_image_size: 128  # FID compares decoded samples with real 128px images
+eval_image_channels: 3
+
+diffuser:
+  clip_value: null  # latents are unbounded; clamping samples to [-1, 1] crushes them
+
+model:
+  base_channels: 128  # the small latent input leaves room for a wider network
+
+training:
+  training_name: latent_celeba
+  batch_size: 256
+  checkpoint_rate: 10
+  latest_checkpoint_rate: 1
+  mixed_precision_training: true
+  mixed_precision_dtype: bfloat16
+  channels_last: true
+  compile: true
+  gradient_clip: 1.0
+  ema_decay: 0.999
+  ema_warmup_steps: 1000
+  number_of_epochs: 200
+
+optimizer:
+  fused: true
+
+logging:
+  image_rate: 636  # once per epoch: 162770 images // 256
+  weight_rate: 636
+
+evaluation:
+  fid_rate: 10  # decoding is cheap, but sampling 5000 images takes a while

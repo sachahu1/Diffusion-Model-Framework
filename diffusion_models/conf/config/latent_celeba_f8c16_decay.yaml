@@ -1,0 +1,26 @@
+# @package _global_
+# Continues a finished latent_celeba_f8c16 diffusion run for 20 more epochs with
+# the learning rate decaying (cosine) from 1e-4 to zero, which a constant rate
+# never does. Launch with:
+#   diffusion-models train diffuser +config=latent_celeba_f8c16_decay \
+#     source_run=runs/latent_celeba_f8c16/<timestamp> decoder_checkpoint=epoch_1.pt
+# It resumes <source_run>/diffuser/checkpoints/final.pt (100 epochs). Its FID is
+# computed every 5 epochs. Resume a different run with `resume_from=<checkpoint>`
+# and set `training.lr_schedule_start_epoch` and `training.number_of_epochs`.
+defaults:
+  - latent_celeba_f8c16
+  - _self_
+
+resume_from: ${source_run}/diffuser/checkpoints/final.pt
+
+optimizer:
+  lr: 1.0e-4
+
+training:
+  training_name: latent_celeba_f8c16_decay
+  number_of_epochs: 120
+  lr_schedule: cosine
+  lr_schedule_start_epoch: 100
+
+evaluation:
+  fid_rate: 5
