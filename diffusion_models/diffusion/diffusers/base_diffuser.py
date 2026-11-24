@@ -118,7 +118,11 @@ class BaseDiffuser(abc.ABC):
     raise NotImplementedError
 
   def _denoise_step(
-    self, images: torch.Tensor, model: torch.nn.Module, timestep: Timestep
+    self,
+    images: torch.Tensor,
+    model: torch.nn.Module,
+    timestep: Timestep,
+    eta: Optional[float] = None,
   ) -> torch.Tensor:
     """Denoise a batch of images by a single step.
 
@@ -130,6 +134,8 @@ class BaseDiffuser(abc.ABC):
       images: A tensor containing a batch of images to denoise.
       model: The model to be used for denoising.
       timestep: The current and previous timesteps.
+      eta: The sampling stochasticity for this step, for diffusers that have
+        one. ``None`` uses the diffuser's own setting.
 
     Returns:
       The images, denoised by one step.

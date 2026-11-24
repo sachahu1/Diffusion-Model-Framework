@@ -115,7 +115,9 @@ class DiffusionInference:
       return pil_image_grid
 
   @torch.no_grad()
-  def get_generator(self, number_of_images: int = 1):
+  def get_generator(
+    self, number_of_images: int = 1, eta: Optional[float] = None
+  ):
     """An image generator.
 
     This method is a generator that will generate a batch of images. At
@@ -125,6 +127,9 @@ class DiffusionInference:
 
     Args:
       number_of_images: The number of images the generator should generate.
+      eta: The sampling stochasticity (``0`` deterministic DDIM, ``1``
+        DDPM-like). ``None`` uses the diffuser's own ``eta``. Diffusers
+        without an ``eta`` raise a ``ValueError`` if one is given.
     """
     images = torch.randn(
       (
@@ -139,7 +144,7 @@ class DiffusionInference:
     for i in self.model.diffuser.steps:
       timestep = self.model.diffuser.get_timestep(images.shape[0], i)
       images = self.model.diffuser._denoise_step(
-        images, model=self.model, timestep=timestep
+        images, model=self.model, timestep=timestep, eta=eta
       )
       images = self.model.diffuser.clip(images)
 

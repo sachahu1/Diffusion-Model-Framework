@@ -126,8 +126,16 @@ class GaussianDiffuser(BaseDiffuser):
 
   @torch.no_grad()
   def _denoise_step(
-    self, images: torch.Tensor, model: torch.nn.Module, timestep: Timestep
+    self,
+    images: torch.Tensor,
+    model: torch.nn.Module,
+    timestep: Timestep,
+    eta: Optional[float] = None,
   ) -> torch.Tensor:
+    if eta is not None:
+      raise ValueError(
+        "GaussianDiffuser has no eta: its sampling noise is fixed (DDPM)."
+      )
     current_timestep = timestep.current
     beta_t = self.beta_scheduler.betas[current_timestep].reshape(-1, 1, 1, 1)
     alpha_t = 1 - beta_t

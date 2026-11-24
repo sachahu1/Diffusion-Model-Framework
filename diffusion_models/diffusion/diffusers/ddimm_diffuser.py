@@ -248,8 +248,11 @@ class DdimDiffuser(BaseDiffuser):
     images: torch.Tensor,
     model: torch.nn.Module,
     timestep: Timestep,
-    eta: float = 0.0,
+    eta: Optional[float] = None,
   ) -> torch.Tensor:
+    # Stepping by hand passes no eta: use the diffuser's own.
+    if eta is None:
+      eta = self.eta
     current_timestep = timestep.current
     previous_timestep = timestep.previous
 
