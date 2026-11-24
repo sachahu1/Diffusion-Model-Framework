@@ -193,3 +193,28 @@ def test_inference_does_not_load_the_optimizer_state(tmp_path):
   assert light.scaler is None
   assert light.model_state_dict.keys() == full.model_state_dict.keys()
   assert light.completed_epochs == full.completed_epochs
+
+
+def test_stepwise_generator_samples_with_the_diffusers_eta():
+  from diffusion_models.diffusion.diffusion_inference import (
+    DiffusionInference,
+  )
+
+  def last_frame(eta):
+    model = _model().eval()
+    torch.manual_seed(0)
+    model.load_state_dict(_model().state_dict())
+    model.diffuser.eta = eta
+    inference = DiffusionInference(
+      model=model,
+      image_shape=(3, 8),
+      device="cpu",
+      reverse_transforms=lambda x: x,
+    )
+    torch.manual_seed(1)
+    return [
+      torch.tensor(list(frame.getdata()))
+      for frame in inference.get_generator(2)
+    ][-1]
+
+  assert not torch.equal(last_frame(0.0), last_frame(1.0))
