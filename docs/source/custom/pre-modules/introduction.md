@@ -48,7 +48,7 @@ uv sync
 ```
 You can now start using the package to train your diffusion model. For example, try running:
 ```shell
-uv run diffusion-models train
+uv run diffusion-models train diffuser
 ```
 
 Building a wheel is also possible via:

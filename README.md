@@ -51,8 +51,18 @@ uv sync
 ```
 You can now start using the package to train your diffusion model. For example, try running:
 ```shell
-uv run diffusion-models train
+uv run diffusion-models train diffuser
 ```
+
+Tab completion for commands, config groups (`model=<TAB>`), presets
+(`+config=<TAB>`) and config keys is available for bash, zsh and fish. For bash:
+```shell
+eval "$(uv run diffusion-models completion bash)"   # add to ~/.bashrc
+diffusion-models configs list diffuser               # groups, options, presets
+```
+Completion reads a cached snapshot of the registered configs (in
+`~/.cache/diffusion-models`), rebuilt automatically whenever the code changes, so
+it stays fast.
 
 Building a wheel is also possible via:
 ```shell
